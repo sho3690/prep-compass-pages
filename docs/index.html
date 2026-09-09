@@ -120,10 +120,10 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .notice .actions{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
 .notice input[type="password"], .notice input[type="text"]{flex:1; min-width:140px; padding:10px 14px; min-height:44px; font-size:16px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink)}
 
-.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px}
-.tile{background:var(--surface); border:0; border-radius:16px; padding:12px 10px; text-align:left; box-shadow:var(--shadow); color:var(--ink); min-height:76px; display:flex; flex-direction:column; justify-content:space-between; gap:4px}
-.tile .lbl{font-size:.72rem; color:var(--ink-3); font-weight:500; line-height:1.3}
-.tile b{font-size:1.5rem; font-weight:700; line-height:1.1}
+.tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px}
+.tile{background:var(--surface); border:0; border-radius:16px; padding:10px 8px; text-align:left; box-shadow:var(--shadow); color:var(--ink); min-height:72px; display:flex; flex-direction:column; justify-content:space-between; gap:4px; min-width:0}
+.tile .lbl{font-size:.7rem; color:var(--ink-3); font-weight:500; line-height:1.3}
+.tile b{font-size:1.35rem; font-weight:700; line-height:1.1}
 .tile b small{font-size:.8rem; font-weight:500; margin-left:2px}
 .tile.is-on{background:var(--primary); color:var(--primary-ink)}
 .tile.is-on .lbl{color:var(--primary-ink); opacity:.85}
@@ -160,10 +160,6 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .frow > svg.chev{width:18px; height:18px; color:var(--hair); align-self:center; flex:none}
 
 /* ---------- 要準備のタスク ---------- */
-.chips{display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; margin-bottom:4px; scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chips button{flex:none; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:500; min-height:36px}
-.chips button[aria-pressed="true"]{background:var(--tint); color:var(--primary); border-color:transparent; font-weight:700}
 .task{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden}
 .task-h{display:flex; gap:12px; align-items:center; width:100%; text-align:left; background:none; border:0; padding:14px 14px 8px; color:inherit}
 .due{flex:none; font-size:.7rem; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-2)}
@@ -176,35 +172,28 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .more{display:flex; align-items:center; justify-content:center; gap:4px; width:100%; background:none; border:0; color:var(--primary); font-size:.82rem; font-weight:600; padding:8px 0 2px; min-height:36px}
 .more svg{width:16px; height:16px}
 
-/* ---------- カレンダー ---------- */
 .seg{display:flex; background:var(--surface-2); border-radius:999px; padding:4px; gap:4px; margin-bottom:12px}
 .seg button{flex:1; border:0; background:none; border-radius:999px; min-height:38px; font-weight:600; color:var(--ink-2); font-size:.85rem}
 .seg button[aria-pressed="true"]{background:var(--primary); color:var(--primary-ink)}
-.strip{background:var(--surface); border-radius:16px; padding:12px 10px 8px; box-shadow:var(--shadow)}
-.strip .hdr7, .strip .wk{display:grid; grid-template-columns:repeat(7,1fr); gap:2px}
-.strip .hdr7 span{text-align:center; font-size:.7rem; color:var(--ink-3); font-weight:600}
-.strip .hdr7 span.is-sat{color:var(--accent)} .strip .hdr7 span.is-sun{color:var(--rose)}
-.strip .wk{margin-top:4px}
-.cell{display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0 4px; background:none; border:0; border-radius:10px; min-height:52px; color:var(--ink)}
-.cell b{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; font-size:.9rem; font-weight:600}
-.cell.is-sat b{color:var(--accent)} .cell.is-sun b, .cell.is-hol b{color:var(--rose)}
-.cell.is-today b{background:var(--primary); color:var(--primary-ink)}
-.cell .m{font-size:.62rem; color:var(--ink-3); line-height:1; margin-top:-2px}
-.cell .dots{display:flex; gap:2px; height:6px}
-.cell .dots s{width:5px; height:5px; border-radius:50%; background:var(--teal-soft); text-decoration:none}
-.cell .dots s.prep{background:var(--rose-soft)} .cell .dots s.check{background:var(--amber-soft)}
-.strip .legend{display:flex; gap:12px; justify-content:center; margin:10px 0 2px; font-size:.68rem; color:var(--ink-3)}
-.strip .legend i{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px; vertical-align:middle}
-.cday{margin-top:16px}
-.cday h3{font-size:.88rem; font-weight:700; margin:0 0 8px; display:flex; align-items:center; gap:8px}
-.cday h3 .hol{font-size:.7rem; color:var(--rose); background:var(--rose-bg); padding:2px 8px; border-radius:999px; font-weight:600}
-.cday h3.is-today::before{content:"今日"; font-size:.66rem; color:var(--primary-ink); background:var(--primary); padding:2px 8px; border-radius:999px}
-.crow{display:flex; gap:10px; align-items:stretch; width:100%; text-align:left; background:var(--surface); border:0; border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); color:inherit; margin-bottom:8px}
-.crow .tm{flex:none; width:78px; font-size:.72rem; color:var(--ink-3); padding-top:2px; line-height:1.4}
-.crow .tm b{display:block; color:var(--ink); font-weight:600; font-size:.8rem}
-.crow .tcol b{font-size:.92rem}
-.crow.is-muted .tcol b{color:var(--ink-2); font-weight:500}
-.crow .badge{align-self:center}
+
+/* ---------- 週の見出し・ヒント ---------- */
+.wk-h{display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; font-size:.82rem; font-weight:700; color:var(--ink-2)}
+.wk-h span{font-weight:500; color:var(--ink-3); font-size:.75rem}
+.hint{display:flex; gap:6px; align-items:flex-start; margin:0 14px 10px; padding:8px 10px; border-radius:10px; background:var(--violet-bg); color:var(--ink-2); font-size:.8rem; line-height:1.45}
+.hint svg{width:15px; height:15px; flex:none; color:var(--violet); margin-top:2px}
+.routine-box{background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:0 14px; margin-bottom:12px}
+details.routine > summary{list-style:none; display:flex; align-items:center; gap:10px; padding:12px 0; cursor:pointer; font-size:.85rem; color:var(--ink-2)}
+details.routine > summary::-webkit-details-marker{display:none}
+details.routine > summary .n{flex:1}
+details.routine > summary svg{width:16px; height:16px; color:var(--hair); transition:transform .2s}
+details.routine[open] > summary svg{transform:rotate(90deg)}
+details.routine .rrow{display:flex; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:.85rem; color:var(--ink-2)}
+details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none}
+.brief{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:6px 16px; margin-top:12px}
+.brief .b{display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--line); font-size:.88rem; color:var(--ink-2); line-height:1.5}
+.brief .b:first-child{border-top:0}
+.brief .b .ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none}
+.brief .b .ic svg{width:16px; height:16px}
 
 /* ---------- AIアシスタント ---------- */
 .ai-intro{display:flex; gap:10px; align-items:center; background:var(--tint); border-radius:18px; padding:12px 14px}
@@ -368,7 +357,7 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
     <div class="brand"><svg><use href="#i-compass"/></svg><span>準備コンパス</span></div>
     <div class="hdr-actions">
       <button class="icon-btn" id="btn-refresh" type="button" aria-label="最新の予定を読み込む" title="最新の予定を読み込む"><svg><use href="#i-refresh"/></svg></button>
-      <button class="icon-btn" type="button" data-act="jump-to" data-target="sec-settings" aria-label="設定へ"><svg><use href="#i-gear"/></svg></button>
+      <button class="icon-btn" type="button" data-act="settings" aria-label="設定を開く"><svg><use href="#i-gear"/></svg></button>
     </div>
   </header>
 
@@ -381,7 +370,7 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
           <span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span>
           <div class="bubble" id="h-bubble"><p>予定を読み込んでいます…</p></div>
         </div>
-        <button class="status" id="h-status" type="button" data-state="loading" data-act="jump-to" data-target="sec-settings">
+        <button class="status" id="h-status" type="button" data-state="loading" data-act="settings">
           <span class="dot"></span><span class="lbl">予定を読み込んでいます…</span><span class="when num"></span>
           <svg class="chev"><use href="#i-right"/></svg>
         </button>
@@ -389,42 +378,23 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
         <div class="tiles" id="h-tiles" role="group" aria-label="期間ごとの予定数"></div>
       </section>
 
-      <section class="sec" id="sec-focus" aria-label="今週の注目予定">
-        <div class="sec-h"><h2>今週の注目予定</h2><span class="range" id="focus-note"></span></div>
-        <div id="h-focus"></div>
-      </section>
-
-      <section class="sec" id="sec-tasks" aria-label="要準備のタスク">
-        <div class="sec-h"><h2>要準備のタスク</h2><span class="range">カードの中でそのままチェックできます</span></div>
-        <div class="chips" id="h-chips" role="group" aria-label="期間で絞り込む"></div>
+      <section class="sec" id="sec-tasks" aria-label="予定と準備">
+        <div class="sec-h"><h2>予定と準備</h2><span class="range" id="tasks-note">カードの中でそのままチェックできます</span></div>
         <div id="h-tasks"></div>
-      </section>
-
-      <section class="sec" id="sec-cal" aria-label="カレンダー">
-        <div class="sec-h"><h2>カレンダー</h2><span class="range">日付をタップでその日へ</span></div>
-        <div class="seg" id="h-seg" role="group" aria-label="表示する週"></div>
-        <div id="tl-strip"></div>
-        <div id="h-days"></div>
       </section>
 
       <section class="sec" id="sec-ai" aria-label="AIアシスタント">
         <div class="sec-h"><h2>AIアシスタント</h2><span class="range" id="ai-note"></span></div>
         <div id="h-ai"></div>
       </section>
-
-      <section class="sec" id="sec-settings" aria-label="設定">
-        <div class="sec-h"><h2>設定</h2><span class="range">表示と連携</span></div>
-        <div id="st-body"></div>
-      </section>
     </div>
   </main>
 
   <nav class="tabbar" aria-label="ページ内の移動">
     <button class="tab is-on" type="button" data-act="jump-to" data-target="top" aria-current="true"><svg><use href="#i-home"/></svg>ホーム</button>
-    <button class="tab" type="button" data-act="jump-to" data-target="sec-tasks"><svg><use href="#i-list"/></svg>タスク</button>
-    <button class="tab" type="button" data-act="jump-to" data-target="sec-cal"><svg><use href="#i-cal"/></svg>カレンダー</button>
+    <button class="tab" type="button" data-act="jump-to" data-target="sec-tasks"><svg><use href="#i-list"/></svg>予定</button>
     <button class="tab" type="button" data-act="jump-to" data-target="sec-ai"><svg><use href="#i-spark"/></svg>AI</button>
-    <button class="tab" type="button" data-act="jump-to" data-target="sec-settings"><svg><use href="#i-gear"/></svg>設定</button>
+    <button class="tab" type="button" data-act="settings"><svg><use href="#i-gear"/></svg>設定</button>
   </nav>
 
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" aria-hidden="true">
@@ -434,6 +404,15 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
       <span style="width:40px"></span>
     </div>
     <div class="sheet-body" id="sh-body"></div>
+  </div>
+
+  <div class="sheet" id="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="st-title" aria-hidden="true">
+    <div class="sheet-bar">
+      <button class="icon-btn" type="button" id="st-back" data-act="settings-close" aria-label="閉じる"><svg><use href="#i-left"/></svg></button>
+      <span class="eyebrow" id="st-title">設定</span>
+      <span style="width:40px"></span>
+    </div>
+    <div class="sheet-body" id="st-body"></div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -693,7 +672,7 @@ let FEED = { available:false };
 let KEY = store.get("feedKey", "") || "";
 let DETAIL = null, DTAB = "prep";
 let AI = { busy:false, list:null, err:null, forId:null };
-let TASKF = "all", CALW = 0;
+let WEEKF = 0;                                // 予定の絞り込み: "all" か 週番号
 const EXPANDED = new Set();
 let CHAT = { busy:false, q:"", a:"", err:null };
 
@@ -817,107 +796,73 @@ function renderGreeting(events, now){
   $("h-bubble").innerHTML = `<p>${esc(bubbleText(events, now, sc))}</p>${ring}`;
 }
 function renderTiles(events, now){
-  let html = "";
-  for (let w = 0; w < S.weeks; w++){
-    const n = events.filter(ev => !ev.routine && !ev.move && bucketWeek(ev, now) === w).length;
-    html += `<button class="tile${CALW === w ? " is-on" : ""}" type="button" data-act="week" data-w="${w}" aria-pressed="${CALW === w}"><span class="lbl">${w === 0 ? "今週の予定" : `${w}週間先`}</span><b class="num">${n}<small>件</small></b></button>`;
-  }
-  $("h-tiles").innerHTML = html;
-  $("h-tiles").style.gridTemplateColumns = `repeat(${S.weeks}, 1fr)`;
+  const main = events.filter(ev => !ev.routine && !ev.move);
+  const tiles = [["all", "すべて", main.length]].concat(Array.from({length:S.weeks}, (_, w) => [String(w), w === 0 ? "今週" : `${w}週間先`, main.filter(ev => bucketWeek(ev, now) === w).length]));
+  $("h-tiles").innerHTML = tiles.map(([k, l, n]) => `<button class="tile${String(WEEKF) === k ? " is-on" : ""}" type="button" data-act="filter" data-f="${k}" aria-pressed="${String(WEEKF) === k}"><span class="lbl">${l}</span><b class="num">${n}<small>件</small></b></button>`).join("");
+  $("h-tiles").style.gridTemplateColumns = `repeat(${tiles.length}, 1fr)`;
 }
 
-/* ---------- 描画：注目予定 ---------- */
-function renderFocus(events, now){
-  const rank = { prep:0, check:1, easy:2, done:3 };
-  let pool = events.filter(ev => !ev.routine && !ev.move && bucketWeek(ev, now) === 0);
-  let note = "今週";
-  if (!pool.length){ pool = events.filter(ev => !ev.routine && !ev.move); note = "今週の予定はないので、先の予定から"; }
-  pool = pool.slice().sort((a, b) => (rank[effLevel(a)] - rank[effLevel(b)]) || (a.start - b.start)).slice(0, 3);
-  $("focus-note").textContent = pool.length ? note : "";
-  $("h-focus").innerHTML = pool.length ? pool.map(ev => {
-    const d = ev.start, lvl = effLevel(ev);
-    return `<button class="frow" type="button" data-act="open" data-id="${esc(ev.id)}">
-      <span class="bar ${lvl}"></span>
-      <span class="dcol ${dayClass(d, HOL[dayKey(d)])}"><b class="num">${md(d)}</b><span class="num">${WD[d.getDay()]} ${ev.allDay ? "終日" : hhmm(d)}</span></span>
+/* ---------- 描画：予定と準備（1つの一覧。準備がある予定はカードの中にチェックリスト） ---------- */
+function taskCard(ev, now){
+  const d = bucketDay(ev, now), items = itemsOf(ev), c = checks(ev), open = EXPANDED.has(ev.id), p = progress(ev), dd = ev.start;
+  const shown = open ? items : items.slice(0, 3);
+  const rows = shown.map((it, i) => `<label class="cli${c[it.id] ? " is-done" : ""}" for="t-${esc(ev.id)}-${i}"><input type="checkbox" id="t-${esc(ev.id)}-${i}" data-act="check" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}"${c[it.id] ? " checked" : ""}><span>${esc(it.title)}</span></label>`).join("");
+  const more = items.length > 3 ? `<button class="more" type="button" data-act="expand" data-id="${esc(ev.id)}" aria-expanded="${open}">${open ? "閉じる" : `他${items.length - 3}件を見る`}<svg><use href="#${open ? "i-up" : "i-down"}"/></svg></button>` : "";
+  const hint = (ev.cls.insight && p.done < p.total) ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : "";
+  const due = p.total && p.done === p.total ? "準備完了" : relDay(d);
+  const hol = HOL[dayKey(dd)];
+  return `<article class="task">
+    <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
+      <span class="dcol ${dayClass(dd, hol)}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]}${hol ? "・祝" : ""} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
       <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${badge(ev)}${kindChip(ev)}</span></span>
-      <svg class="chev"><use href="#i-right"/></svg></button>`;
-  }).join("") : `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "注目する予定はありません。"}</p></div>`;
+      <span class="due${d <= 2 && p.total && p.done < p.total && ev.cls.level === "prep" ? " soon" : ""} num">${due}</span></button>
+    ${hint}${rows ? `<div class="cl">${rows}${more}</div>` : ""}</article>`;
 }
-
-/* ---------- 描画：要準備のタスク ---------- */
 function renderTasks(events, now){
-  const all = events.filter(ev => !ev.routine && !ev.move && itemsOf(ev).length && ev.cls.level !== "easy");
-  const counts = [all.length].concat(Array.from({length:S.weeks}, (_, w) => all.filter(ev => bucketWeek(ev, now) === w).length));
-  if (TASKF !== "all" && (+TASKF >= S.weeks)) TASKF = "all";
-  $("h-chips").innerHTML = [["all", `すべて (${counts[0]})`]].concat(Array.from({length:S.weeks}, (_, w) => [String(w), `${weekLabel(w)} (${counts[w+1]})`]))
-    .map(([k, l]) => `<button type="button" data-act="task-filter" data-f="${k}" aria-pressed="${TASKF === k}">${l}</button>`).join("");
-  const list = TASKF === "all" ? all : all.filter(ev => bucketWeek(ev, now) === +TASKF);
-  $("h-tasks").innerHTML = list.length ? list.map(ev => {
-    const d = bucketDay(ev, now), items = itemsOf(ev), c = checks(ev), open = EXPANDED.has(ev.id);
-    const shown = open ? items : items.slice(0, 3);
-    const rows = shown.map((it, i) => `<label class="cli${c[it.id] ? " is-done" : ""}" for="t-${esc(ev.id)}-${i}"><input type="checkbox" id="t-${esc(ev.id)}-${i}" data-act="check" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}"${c[it.id] ? " checked" : ""}><span>${esc(it.title)}</span></label>`).join("");
-    const more = items.length > 3 ? `<button class="more" type="button" data-act="expand" data-id="${esc(ev.id)}" aria-expanded="${open}">${open ? "閉じる" : `他${items.length - 3}件を見る`}<svg><use href="#${open ? "i-up" : "i-down"}"/></svg></button>` : "";
-    const p = progress(ev), dd = ev.start;
-    return `<article class="task">
-      <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
-        <span class="dcol ${dayClass(dd, HOL[dayKey(dd)])}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
-        <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}</span>
-        <span class="due${d <= 2 && p.done < p.total ? " soon" : ""} num">${p.done === p.total ? "準備完了" : relDay(d)}</span></button>
-      <div class="cl">${rows}${more}</div></article>`;
-  }).join("") : `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "この期間に準備が必要な予定はありません。"}</p></div>`;
+  const weeks = WEEKF === "all" ? Array.from({length:S.weeks}, (_, w) => w) : [Number(WEEKF)];
+  let html = "", shown = 0;
+  for (const w of weeks){
+    const inWeek = events.filter(ev => bucketWeek(ev, now) === w && !ev.move);
+    const main = inWeek.filter(ev => !ev.routine), routine = inWeek.filter(ev => ev.routine);
+    const from = addDays(startOfDay(now), w*7), to = addDays(from, 6);
+    if (WEEKF === "all") html += `<div class="wk-h">${weekLabel(w)}<span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>`;
+    html += main.map(ev => taskCard(ev, now)).join("");
+    shown += main.length;
+    if (routine.length) html += `<div class="routine-box"><details class="routine"><summary><span class="n">${esc(routine[0].title)}${routine.length > 1 ? " など" : ""}、定型の予定 ${routine.length}件</span><span class="badge easy">準備不要</span><svg><use href="#i-right"/></svg></summary>${routine.map(ev => `<div class="rrow"><b class="num">${md(ev.start)}（${WD[ev.start.getDay()]}）</b><span>${esc(ev.title)} ${ev.allDay ? "終日" : `${hhmm(ev.start)}–${hhmm(ev.end)}`}</span></div>`).join("")}</details></div>`;
+    if (!main.length && !routine.length) html += `<div class="card" style="margin-bottom:12px"><p class="empty">${META.loading ? "読み込み中…" : `${weekLabel(w)}の予定はありません。`}</p></div>`;
+  }
+  $("tasks-note").textContent = shown ? `${shown}件・カードの中でそのままチェックできます` : "";
+  $("h-tasks").innerHTML = html;
 }
 
-/* ---------- 描画：カレンダー ---------- */
-function renderCalendar(byDay, now, today){
-  if (CALW >= S.weeks) CALW = 0;
-  $("h-seg").innerHTML = Array.from({length:S.weeks}, (_, w) => `<button type="button" data-act="week" data-w="${w}" aria-pressed="${CALW === w}">${weekLabel(w)}</button>`).join("");
-  const from = addDays(today, CALW * 7);
-  let strip = `<div class="hdr7">${Array.from({length:7}, (_, j) => { const d = addDays(from, j); return `<span class="${dayClass(d)}">${WD[d.getDay()]}</span>`; }).join("")}</div><div class="wk">`;
-  for (let j = 0; j < 7; j++){
-    const d = addDays(from, j), k = dayKey(d), hol = HOL[k];
-    const evs = (byDay[k] || []).filter(e => !e.routine && !e.move);
-    const dots = evs.slice(0, 3).map(e => `<s class="${e.cls.level}"></s>`).join("");
-    const showMonth = j === 0 || d.getDate() === 1;
-    strip += `<button class="cell ${dayClass(d, hol)}${k === dayKey(today) ? " is-today" : ""}" type="button" data-act="jump" data-day="${k}" aria-label="${jpDate(d)}${hol ? "・" + esc(hol) : ""}、準備を見る予定${evs.length}件">
-      <b class="num">${d.getDate()}</b>${showMonth ? `<span class="m">${d.getMonth()+1}月</span>` : ""}<span class="dots">${dots}</span></button>`;
-  }
-  strip += `</div><div class="legend"><span><i style="background:var(--rose-soft)"></i>要準備</span><span><i style="background:var(--amber-soft)"></i>確認のみ</span><span><i style="background:var(--teal-soft)"></i>準備不要</span></div>`;
-  $("tl-strip").innerHTML = `<div class="strip" role="group" aria-label="${weekLabel(CALW)}の日付">${strip}</div>`;
-
-  let days = "";
-  for (let j = 0; j < 7; j++){
-    const d = addDays(from, j), k = dayKey(d), all = (byDay[k] || []).filter(e => !e.move);
-    if (!all.length) continue;
-    const hol = HOL[k];
-    days += `<div class="cday" id="day-${k}"><h3 class="${k === dayKey(today) ? "is-today" : ""}"><span class="num ${dayClass(d, hol)}">${jpDate(d)}</span>${hol ? `<span class="hol">${esc(hol)}</span>` : ""}</h3>
-      ${all.map(ev => { const lvl = effLevel(ev); return `<button class="crow${ev.routine ? " is-muted" : ""}" type="button" data-act="open" data-id="${esc(ev.id)}">
-        <span class="tm num">${ev.allDay ? `<b>終日</b>${daysUntil(ev.end, ev.start) > 0 ? `${md(ev.start)}〜${md(ev.end)}` : ""}` : `<b>${hhmm(ev.start)}–${hhmm(ev.end)}</b>${durText(ev.end - ev.start)}`}</span>
-        <span class="bar ${ev.routine ? "" : lvl}"></span>
-        <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}</span>${badge(ev)}</button>`; }).join("")}</div>`;
-  }
-  $("h-days").innerHTML = days || `<div class="card" style="margin-top:12px"><p class="empty">${META.loading ? "読み込み中…" : `${weekLabel(CALW)}の予定はありません。`}</p></div>`;
+/* ---------- 描画：AIアシスタント（予定単位ではなく、全体の見通しと相談） ---------- */
+function briefing(events, now){
+  const out = [], main = events.filter(ev => !ev.routine && !ev.move), today = startOfDay(now);
+  const soon = main.filter(ev => bucketDay(ev, now) <= 2);
+  if (soon.length) out.push({ tone:"blue", icon:"i-clock", text:`3日以内の予定は${soon.length}件：${soon.slice(0, 4).map(ev => `${ev.title}（${relDay(bucketDay(ev, now))}）`).join("、")}${soon.length > 4 ? " ほか" : ""}。` });
+  else out.push({ tone:"green", icon:"i-check", text:"3日以内に予定はありません。少し先の準備に手をつけるチャンスです。" });
+  const perDay = {}; for (const ev of main){ const k = dayKey(addDays(today, bucketDay(ev, now))); perDay[k] = (perDay[k] || 0) + 1; }
+  const busy = Object.keys(perDay).filter(k => perDay[k] >= 3).sort().map(k => localDate(k));
+  if (busy.length) out.push({ tone:"amber", icon:"i-alert", text:`${busy.slice(0, 2).map(d => `${md(d)}（${WD[d.getDay()]}）`).join("・")}は予定が3件以上。移動と休憩に余裕を持たせましょう。` });
+  const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < S.weeks * 7; });
+  if (hols.length) out.push({ tone:"rose", icon:"i-cal", text:`${hols.slice(0, 3).map(k => `${md(localDate(k))} ${HOL[k]}`).join("、")}。休みの前後は、予約や締切のずれに注意。` });
+  const remain = main.reduce((n, ev) => { const p = progress(ev); return n + (p.total - p.done); }, 0);
+  const prepLeft = main.filter(ev => ev.cls.level === "prep" && progress(ev).done < progress(ev).total).length;
+  if (remain) out.push({ tone:"violet", icon:"i-list", text:`チェックリストの残りは合計${remain}件（要準備の予定 ${prepLeft}件）。近い予定から順に進めましょう。` });
+  else if (main.length) out.push({ tone:"green", icon:"i-check", text:"チェックリストはすべて完了しています。" });
+  return out;
 }
-
-/* ---------- 描画：AIアシスタント ---------- */
 function renderAssistant(events, now){
-  const ins = insightsFor(events, now).slice(0, 3);
-  const cards = ins.map(x => {
-    const c = checks(x.ev), todo = itemsOf(x.ev).filter(it => !c[it.id]).slice(0, 4);
-    const rows = todo.map((it, i) => `<label class="cli" for="a-${esc(x.ev.id)}-${i}"><input type="checkbox" id="a-${esc(x.ev.id)}-${i}" data-act="check" data-ev="${esc(x.ev.id)}" data-item="${esc(it.id)}"><span>${esc(it.title)}</span></label>`).join("");
-    return `<div class="ai-card"><div class="hd"><span class="ic" data-tone="${x.soon ? "rose" : "blue"}"><svg><use href="#i-bulb"/></svg></span>
-      <div><h3>${esc(x.title)}に備えて</h3><p>${esc(x.text)}</p></div></div>
-      ${rows ? `<p class="sub">おすすめのアクション</p>${rows}` : ""}
-      <button class="btn small" type="button" data-act="open" data-id="${esc(x.ev.id)}">チェックリストを開く</button></div>`;
-  }).join("");
+  const items = META.loading ? [] : briefing(events, now);
   const askable = !!sampleFn;
-  $("ai-note").textContent = askable ? "" : "相談は claude.ai 版で使えます";
+  $("ai-note").textContent = askable ? "見通しと相談" : "相談は claude.ai 版で使えます";
   let chat = "";
   if (askable){
     const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
-    chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
-  }
-  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>${S.weeks}週間先までを見据えて、今からできる準備を提案します。</p></div>
-    ${cards || `<div class="card" style="margin-top:12px"><p class="empty">${META.loading ? "読み込み中…" : "いまのところ、先回りしておくことはありません。"}</p></div>`}${chat}`;
+    chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…（例：来週の持ち物は？）" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
+  } else chat = `<p class="empty" style="padding:10px 2px 0">予定についてAIに相談するには、<a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">claude.ai 版</a>を開いてください。</p>`;
+  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>${S.weeks}週間先までの見通しをまとめました。</p></div>
+    ${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : `<div class="card" style="margin-top:12px"><p class="empty">読み込み中…</p></div>`}${chat}`;
 }
 async function askAssistant(q){
   if (!sampleFn || CHAT.busy || !q) return;
@@ -949,16 +894,12 @@ ${ctx || "（予定はありません）"}
 
 /* ---------- 描画：ホーム全体 ---------- */
 function renderHome(){
-  const now = new Date(), today = startOfDay(now);
+  const now = new Date();
   renderStatus();
   const events = visible(now);
-  const byDay = {};
-  for (const ev of events){ const k = dayKey(addDays(today, bucketDay(ev, now))); (byDay[k] = byDay[k] || []).push(ev); }
   renderGreeting(events, now);
   renderTiles(events, now);
-  renderFocus(events, now);
   renderTasks(events, now);
-  renderCalendar(byDay, now, today);
   renderAssistant(events, now);
 }
 
@@ -966,6 +907,7 @@ function renderHome(){
 function renderSettings(){
   const box = $("st-body");
   if (document.activeElement && document.activeElement !== document.body && box.contains(document.activeElement)) return;
+  if (!$("settings-sheet").classList.contains("is-open") && !box.childElementCount) { /* 初回は開いたときに描く */ }
   const calOpts = (CALS || []).map(c => `<option value="${esc(c.id)}"${S.calendarId === c.id ? " selected" : ""}>${esc(c.summary || c.id)}</option>`).join("");
   const feedMode = !mcp && (FEED.available || KEY);
   box.innerHTML = `
@@ -1000,6 +942,17 @@ function openDetail(id){
   $("main").inert = true; document.querySelector(".tabbar").inert = true; document.querySelector(".hdr").inert = true;
   $("sh-body").scrollTop = 0;
   setTimeout(() => $("sh-back").focus(), 50);
+}
+function openSettings(){
+  renderSettings();
+  const sh = $("settings-sheet"); sh.classList.add("is-open"); sh.setAttribute("aria-hidden", "false");
+  $("main").inert = true; document.querySelector(".tabbar").inert = true; document.querySelector(".hdr").inert = true;
+  $("st-body").scrollTop = 0; setTimeout(() => $("st-back").focus(), 50);
+}
+function closeSettings(){
+  const sh = $("settings-sheet"); sh.classList.remove("is-open"); sh.setAttribute("aria-hidden", "true");
+  $("main").inert = false; document.querySelector(".tabbar").inert = false; document.querySelector(".hdr").inert = false;
+  renderHome(); const b = document.querySelector(".tab.is-on"); if (b) b.focus();
 }
 function closeDetail(){
   flushMemo();
@@ -1113,7 +1066,7 @@ ${items}
 
 /* ---------- ページ内の移動と描画のまとめ ---------- */
 function renderAll(){ renderHome(); if (DETAIL) renderDetail(); }
-const SPY = ["top","sec-tasks","sec-cal","sec-ai","sec-settings"];
+const SPY = ["top","sec-tasks","sec-ai"];
 const smooth = () => (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
 function setActiveTab(id){
   document.querySelectorAll(".tab").forEach(b => { const on = b.dataset.target === id; b.classList.toggle("is-on", on); if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
@@ -1141,14 +1094,14 @@ document.addEventListener("click", (e) => {
   if (act === "jump-to"){ jumpTo(el.dataset.target); return; }
   if (act === "open"){ openDetail(el.dataset.id); return; }
   if (act === "close"){ closeDetail(); return; }
-  if (act === "jump"){ const t = document.getElementById(`day-${el.dataset.day}`); if (t) scrollMainTo(t, 8); else toast("この日は予定がありません"); return; }
-  if (act === "week"){ CALW = +el.dataset.w; renderHome(); if (el.classList.contains("tile")) jumpTo("sec-cal"); return; }
-  if (act === "task-filter"){ TASKF = el.dataset.f; renderHome(); return; }
+  if (act === "settings"){ openSettings(); return; }
+  if (act === "settings-close"){ closeSettings(); return; }
+  if (act === "filter"){ WEEKF = el.dataset.f === "all" ? "all" : Number(el.dataset.f); renderHome(); jumpTo("sec-tasks"); return; }
   if (act === "expand"){ const id = el.dataset.id; if (EXPANDED.has(id)) EXPANDED.delete(id); else EXPANDED.add(id); renderHome(); return; }
   if (act === "dtab"){ DTAB = el.dataset.t; renderDetail(); return; }
   if (act === "demo"){ loadDemo(); return; }
   if (act === "refresh"){ refresh(); return; }
-  if (act === "weeks"){ S.weeks = +el.dataset.w; saveSettings(); if (mcp) startWatch(true); else if (META.demo) loadDemo(); renderAll(); renderSettings(); return; }
+  if (act === "weeks"){ S.weeks = +el.dataset.w; saveSettings(); if (WEEKF !== "all" && WEEKF >= S.weeks) WEEKF = 0; if (mcp) startWatch(true); else if (META.demo) loadDemo(); renderAll(); renderSettings(); return; }
   if (act === "wipe"){
     if (el.dataset.armed !== "1"){
       el.dataset.armed = "1"; el.textContent = "本当に消去する（もう一度タップ）";
@@ -1192,7 +1145,7 @@ document.addEventListener("change", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.target && e.target.id === "add-item"){ e.preventDefault(); const ev = DETAIL && byId(DETAIL); if (ev) addCustom(ev); }
-  if (e.key === "Escape" && DETAIL) closeDetail();
+  if (e.key === "Escape"){ if (DETAIL) closeDetail(); else if ($("settings-sheet").classList.contains("is-open")) closeSettings(); }
 });
 let memoTimer = null, memoPending = null, warnedSave = false;
 function warnSave(){ if (warnedSave) return; warnedSave = true; toast("保存できませんでした。プライベートブラウズでは保存されません"); }
@@ -1383,7 +1336,6 @@ function loadDemo(){
 
 /* ---------- 起動 ---------- */
 $("btn-refresh").addEventListener("click", () => refresh(false));
-renderSettings();
 renderHome();
 setInterval(() => {
   const k = dayKey(new Date());
