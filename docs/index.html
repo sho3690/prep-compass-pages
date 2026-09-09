@@ -1,1 +1,1413 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>準備コンパス</title></head><body><p>準備中です。</p></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>準備コンパス</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<meta name="theme-color" content="#FAFAFB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1117" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="準備コンパス">
+<meta name="description" content="Googleカレンダーの先の予定から、事前に準備すべきことを教えてくれるAI秘書">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+<style>
+:root{
+  --bg:#FAFAFB; --surface:#FFFFFF; --surface-2:#F1F2F6; --tint:#EEF0FF; --tint-2:#F5F3FF;
+  --ink:#1E293B; --ink-2:#334155; --ink-3:#5B6B82; --hair:#94A3B8;
+  --line:#E6E8EF; --line-2:#D5D9E3;
+  --primary:#4F46E5; --primary-ink:#FFFFFF; --accent:#6366F1; --focus:#6366F1;
+  --violet:#6D28D9; --violet-soft:#A78BFA; --violet-bg:#F3F0FF;
+  --teal:#0F766E; --teal-soft:#14B8A6; --teal-bg:#CCFBF1;
+  --rose:#BE123C; --rose-soft:#FB7185; --rose-bg:#FFE4E6;
+  --amber:#B45309; --amber-soft:#F59E0B; --amber-bg:#FEF3C7;
+  --blue:#4338CA; --blue-bg:#E0E7FF;
+  --green:#0F766E; --green-bg:#CCFBF1;
+  --shadow:0 1px 2px rgba(30,41,59,.04), 0 6px 20px rgba(30,41,59,.06);
+  --ring-track:#E6E8EF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1117; --surface:#171A23; --surface-2:#1F2330; --tint:#1E2142; --tint-2:#241F3D;
+    --ink:#E5E7EB; --ink-2:#CBD5E1; --ink-3:#98A4B8; --hair:#4B5563;
+    --line:#262B38; --line-2:#343B4B;
+    --primary:#A5B4FC; --primary-ink:#0F1117; --accent:#818CF8; --focus:#818CF8;
+    --violet:#C4B5FD; --violet-soft:#A78BFA; --violet-bg:#2A2350;
+    --teal:#5EEAD4; --teal-soft:#2DD4BF; --teal-bg:#0F2E2B;
+    --rose:#FDA4AF; --rose-soft:#FB7185; --rose-bg:#3B1222;
+    --amber:#FCD34D; --amber-soft:#F59E0B; --amber-bg:#3B2A0F;
+    --blue:#A5B4FC; --blue-bg:#1E2142;
+    --green:#5EEAD4; --green-bg:#0F2E2B;
+    --shadow:0 1px 2px rgba(0,0,0,.4); --ring-track:#262B38;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1117; --surface:#171A23; --surface-2:#1F2330; --tint:#1E2142; --tint-2:#241F3D;
+  --ink:#E5E7EB; --ink-2:#CBD5E1; --ink-3:#98A4B8; --hair:#4B5563;
+  --line:#262B38; --line-2:#343B4B;
+  --primary:#A5B4FC; --primary-ink:#0F1117; --accent:#818CF8; --focus:#818CF8;
+  --violet:#C4B5FD; --violet-soft:#A78BFA; --violet-bg:#2A2350;
+  --teal:#5EEAD4; --teal-soft:#2DD4BF; --teal-bg:#0F2E2B;
+  --rose:#FDA4AF; --rose-soft:#FB7185; --rose-bg:#3B1222;
+  --amber:#FCD34D; --amber-soft:#F59E0B; --amber-bg:#3B2A0F;
+  --blue:#A5B4FC; --blue-bg:#1E2142;
+  --green:#5EEAD4; --green-bg:#0F2E2B;
+  --shadow:0 1px 2px rgba(0,0,0,.4); --ring-track:#262B38;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink-2);
+  font:16px/1.6 "Noto Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Sans",system-ui,sans-serif;
+  -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; overflow:hidden;
+}
+h1,h2,h3{color:var(--ink); margin:0}
+button,input,textarea,select{font:inherit; color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus); outline-offset:2px; border-radius:8px}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+.app{height:100vh; height:100dvh; display:flex; flex-direction:column; max-width:520px; margin:0 auto; position:relative; background:var(--bg); overflow:hidden}
+.hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--ink); font-size:1.05rem}
+.brand svg{width:26px; height:26px; color:var(--accent)}
+.hdr-actions{display:flex; gap:8px}
+.icon-btn{width:40px; height:40px; border-radius:50%; border:0; background:var(--surface); display:grid; place-items:center; color:var(--primary); box-shadow:var(--shadow)}
+.icon-btn svg{width:20px; height:20px}
+.icon-btn[disabled]{opacity:.5; cursor:default}
+.icon-btn.is-spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .icon-btn.is-spin svg{animation:none} }
+main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
+.page{padding:6px 18px 40px}
+
+/* ---------- あいさつ・AI秘書 ---------- */
+.eyebrow{font-size:.78rem; color:var(--ink-3); font-weight:500; margin:0}
+.greet h1{font-size:1.5rem; line-height:1.35; font-weight:700; letter-spacing:-.01em; margin:2px 0 12px; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.greet h1 .wx{width:26px; height:26px; color:var(--amber-soft)}
+.assistant{display:flex; gap:10px; align-items:flex-start}
+.avatar{width:44px; height:44px; flex:none; border-radius:50%; box-shadow:0 6px 16px rgba(99,102,241,.25)}
+.avatar svg{width:44px; height:44px; display:block}
+.bubble{flex:1; min-width:0; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center}
+.bubble p{margin:0; font-size:.9rem; line-height:1.55; color:var(--ink-2); flex:1}
+.mini-score{flex:none; position:relative; width:48px; height:48px}
+.mini-score svg{width:48px; height:48px; transform:rotate(-90deg)}
+.mini-score .track{fill:none; stroke:var(--ring-track); stroke-width:5}
+.mini-score .bar{fill:none; stroke:var(--accent); stroke-width:5; stroke-linecap:round}
+.mini-score[data-tone="low"] .bar{stroke:var(--rose-soft)}
+.mini-score[data-tone="warn"] .bar{stroke:var(--amber-soft)}
+.mini-score[data-tone="good"] .bar{stroke:var(--teal-soft)}
+.mini-score b{position:absolute; inset:0; display:grid; place-items:center; font-size:.72rem; font-weight:700; color:var(--ink)}
+.status{display:inline-flex; align-items:center; gap:8px; font-size:.8rem; color:var(--ink-3); background:none; border:0; padding:10px 0 0; text-align:left}
+.status .dot{width:8px; height:8px; border-radius:50%; background:var(--teal-soft); flex:none}
+.status[data-state="demo"] .dot{background:var(--amber-soft)}
+.status[data-state="error"] .dot{background:var(--rose-soft)}
+.status[data-state="loading"] .dot{background:var(--hair)}
+.status .chev{width:14px; height:14px}
+.notice{border-radius:16px; padding:14px 16px; margin:12px 0 0; font-size:.9rem; background:var(--surface); box-shadow:var(--shadow); border:1px solid transparent}
+.notice.err{border-color:var(--rose-soft); background:var(--rose-bg)}
+.notice.warn{border-color:var(--amber-soft); background:var(--amber-bg)}
+.notice h3{font-size:.95rem; display:flex; align-items:center; gap:8px; margin:0 0 4px}
+.notice h3 svg{width:18px; height:18px; flex:none}
+.notice p{margin:0; color:var(--ink-2)}
+.notice .actions{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.notice input[type="password"], .notice input[type="text"]{flex:1; min-width:140px; padding:10px 14px; min-height:44px; font-size:16px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink)}
+
+.tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px}
+.tile{background:var(--surface); border:0; border-radius:16px; padding:12px 10px; text-align:left; box-shadow:var(--shadow); color:var(--ink); min-height:76px; display:flex; flex-direction:column; justify-content:space-between; gap:4px}
+.tile .lbl{font-size:.72rem; color:var(--ink-3); font-weight:500; line-height:1.3}
+.tile b{font-size:1.5rem; font-weight:700; line-height:1.1}
+.tile b small{font-size:.8rem; font-weight:500; margin-left:2px}
+.tile.is-on{background:var(--primary); color:var(--primary-ink)}
+.tile.is-on .lbl{color:var(--primary-ink); opacity:.85}
+
+/* ---------- セクション共通 ---------- */
+.sec{margin-top:26px}
+.sec-h{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
+.sec-h h2{font-size:1.1rem; font-weight:700}
+.sec-h .range{font-size:.75rem; color:var(--ink-3); flex:1; min-width:0}
+.card{background:var(--surface); border-radius:18px; box-shadow:var(--shadow)}
+.empty{color:var(--ink-3); font-size:.9rem; margin:0; padding:14px 16px}
+
+.badge{font-size:.7rem; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; line-height:1.3}
+.badge.prep{color:var(--rose); background:var(--rose-bg)}
+.badge.check{color:var(--amber); background:var(--amber-bg)}
+.badge.easy{color:var(--teal); background:var(--teal-bg)}
+.badge.done{color:var(--blue); background:var(--blue-bg)}
+.badge.done::before{content:"✓ "}
+.chip{font-size:.7rem; font-weight:500; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-2); white-space:nowrap}
+.bar{width:4px; border-radius:4px; background:var(--hair); flex:none; align-self:stretch}
+.bar.prep{background:var(--rose-soft)} .bar.check{background:var(--amber-soft)} .bar.easy{background:var(--teal-soft)} .bar.done{background:var(--accent)}
+.dcol{flex:none; width:50px}
+.dcol b{display:block; font-size:1rem; color:var(--ink); line-height:1.2}
+.dcol span{display:block; font-size:.72rem; color:var(--ink-3); line-height:1.3}
+.dcol.is-sat b{color:var(--accent)} .dcol.is-sun b, .dcol.is-hol b{color:var(--rose)}
+.tcol{flex:1; min-width:0}
+.tcol b{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:.98rem; color:var(--ink); line-height:1.35}
+.tcol .loc{display:flex; align-items:center; gap:4px; font-size:.78rem; color:var(--ink-3); margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
+.tcol .loc svg{width:13px; height:13px; flex:none}
+.tcol .bd{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+
+/* ---------- 注目予定 ---------- */
+.frow{display:flex; gap:12px; align-items:stretch; width:100%; text-align:left; background:var(--surface); border:0; border-radius:16px; padding:12px; box-shadow:var(--shadow); color:inherit; margin-bottom:10px}
+.frow > svg.chev{width:18px; height:18px; color:var(--hair); align-self:center; flex:none}
+
+/* ---------- 要準備のタスク ---------- */
+.chips{display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; margin-bottom:4px; scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:500; min-height:36px}
+.chips button[aria-pressed="true"]{background:var(--tint); color:var(--primary); border-color:transparent; font-weight:700}
+.task{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden}
+.task-h{display:flex; gap:12px; align-items:center; width:100%; text-align:left; background:none; border:0; padding:14px 14px 8px; color:inherit}
+.due{flex:none; font-size:.7rem; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-2)}
+.due.soon{background:var(--rose-bg); color:var(--rose)}
+.cl{padding:0 14px 12px}
+.cli{display:flex; align-items:center; gap:12px; padding:9px 12px; border-radius:12px; background:var(--surface-2); margin-top:6px; cursor:pointer}
+.cli input{width:22px; height:22px; accent-color:var(--primary); margin:0; flex:none}
+.cli span{font-size:.9rem; color:var(--ink); flex:1; min-width:0}
+.cli.is-done span{color:var(--ink-3); text-decoration:line-through}
+.more{display:flex; align-items:center; justify-content:center; gap:4px; width:100%; background:none; border:0; color:var(--primary); font-size:.82rem; font-weight:600; padding:8px 0 2px; min-height:36px}
+.more svg{width:16px; height:16px}
+
+/* ---------- カレンダー ---------- */
+.seg{display:flex; background:var(--surface-2); border-radius:999px; padding:4px; gap:4px; margin-bottom:12px}
+.seg button{flex:1; border:0; background:none; border-radius:999px; min-height:38px; font-weight:600; color:var(--ink-2); font-size:.85rem}
+.seg button[aria-pressed="true"]{background:var(--primary); color:var(--primary-ink)}
+.strip{background:var(--surface); border-radius:16px; padding:12px 10px 8px; box-shadow:var(--shadow)}
+.strip .hdr7, .strip .wk{display:grid; grid-template-columns:repeat(7,1fr); gap:2px}
+.strip .hdr7 span{text-align:center; font-size:.7rem; color:var(--ink-3); font-weight:600}
+.strip .hdr7 span.is-sat{color:var(--accent)} .strip .hdr7 span.is-sun{color:var(--rose)}
+.strip .wk{margin-top:4px}
+.cell{display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0 4px; background:none; border:0; border-radius:10px; min-height:52px; color:var(--ink)}
+.cell b{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; font-size:.9rem; font-weight:600}
+.cell.is-sat b{color:var(--accent)} .cell.is-sun b, .cell.is-hol b{color:var(--rose)}
+.cell.is-today b{background:var(--primary); color:var(--primary-ink)}
+.cell .m{font-size:.62rem; color:var(--ink-3); line-height:1; margin-top:-2px}
+.cell .dots{display:flex; gap:2px; height:6px}
+.cell .dots s{width:5px; height:5px; border-radius:50%; background:var(--teal-soft); text-decoration:none}
+.cell .dots s.prep{background:var(--rose-soft)} .cell .dots s.check{background:var(--amber-soft)}
+.strip .legend{display:flex; gap:12px; justify-content:center; margin:10px 0 2px; font-size:.68rem; color:var(--ink-3)}
+.strip .legend i{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px; vertical-align:middle}
+.cday{margin-top:16px}
+.cday h3{font-size:.88rem; font-weight:700; margin:0 0 8px; display:flex; align-items:center; gap:8px}
+.cday h3 .hol{font-size:.7rem; color:var(--rose); background:var(--rose-bg); padding:2px 8px; border-radius:999px; font-weight:600}
+.cday h3.is-today::before{content:"今日"; font-size:.66rem; color:var(--primary-ink); background:var(--primary); padding:2px 8px; border-radius:999px}
+.crow{display:flex; gap:10px; align-items:stretch; width:100%; text-align:left; background:var(--surface); border:0; border-radius:14px; padding:10px 12px; box-shadow:var(--shadow); color:inherit; margin-bottom:8px}
+.crow .tm{flex:none; width:78px; font-size:.72rem; color:var(--ink-3); padding-top:2px; line-height:1.4}
+.crow .tm b{display:block; color:var(--ink); font-weight:600; font-size:.8rem}
+.crow .tcol b{font-size:.92rem}
+.crow.is-muted .tcol b{color:var(--ink-2); font-weight:500}
+.crow .badge{align-self:center}
+
+/* ---------- AIアシスタント ---------- */
+.ai-intro{display:flex; gap:10px; align-items:center; background:var(--tint); border-radius:18px; padding:12px 14px}
+.ai-intro p{margin:0; font-size:.85rem; color:var(--ink-2)}
+.ai-intro b{display:block; font-size:.8rem; color:var(--primary)}
+.ai-card{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:14px 16px; margin-top:12px}
+.ai-card .hd{display:flex; gap:10px; align-items:flex-start}
+.ai-card .hd .ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; flex:none}
+.ai-card .hd .ic svg{width:20px; height:20px}
+.ic[data-tone="blue"]{background:var(--blue-bg); color:var(--blue)}
+.ic[data-tone="green"]{background:var(--green-bg); color:var(--green)}
+.ic[data-tone="rose"]{background:var(--rose-bg); color:var(--rose)}
+.ic[data-tone="amber"]{background:var(--amber-bg); color:var(--amber)}
+.ic[data-tone="violet"]{background:var(--violet-bg); color:var(--violet)}
+.ai-card h3{font-size:.95rem; line-height:1.4}
+.ai-card p{margin:4px 0 0; font-size:.85rem; color:var(--ink-2)}
+.ai-card .sub{font-size:.75rem; color:var(--ink-3); font-weight:700; margin:12px 0 2px}
+.ai-card .cli{background:var(--tint)}
+.ai-card .btn{margin-top:12px; width:100%}
+.ask{display:flex; gap:8px; margin-top:14px; align-items:center}
+.ask input{flex:1; min-width:0; padding:10px 16px; min-height:46px; font-size:16px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink)}
+.ask .send{width:46px; height:46px; border-radius:50%; border:0; background:var(--primary); color:var(--primary-ink); display:grid; place-items:center; flex:none}
+.ask .send svg{width:20px; height:20px}
+.ask .send[disabled]{opacity:.5}
+.answer{margin-top:10px; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); font-size:.9rem; white-space:pre-wrap; word-break:break-word; color:var(--ink-2)}
+.answer .q{font-size:.78rem; color:var(--ink-3); margin:0 0 6px; white-space:normal}
+.answer .note{font-size:.78rem; color:var(--ink-3); margin-top:6px; white-space:normal}
+
+/* ---------- ボタン・フォーム ---------- */
+.btn{min-height:44px; padding:0 18px; border-radius:999px; border:1px solid var(--line-2); background:var(--surface); color:var(--primary); font-weight:600; display:inline-flex; align-items:center; gap:8px; justify-content:center; text-decoration:none}
+.btn.primary{background:var(--primary); color:var(--primary-ink); border-color:var(--primary)}
+.btn.danger{color:var(--rose); border-color:var(--rose-soft)}
+.btn.small{min-height:36px; padding:0 14px; font-size:.85rem}
+.btn[disabled]{opacity:.55; cursor:default}
+.btn svg{width:18px; height:18px}
+.toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px}
+.field{margin-top:18px}
+.field label, .field .lbl{display:block; font-size:.9rem; font-weight:600; margin-bottom:4px; color:var(--ink)}
+.field .help{font-size:.78rem; color:var(--ink-3); margin:0 0 8px}
+.field input[type="text"], .field input[type="password"], .field textarea, .field select{width:100%; padding:10px 14px; min-height:44px; font-size:16px; border:1px solid var(--line-2); border-radius:12px; background:var(--surface); color:var(--ink)}
+.switch{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0}
+.switch input{width:26px; height:26px; accent-color:var(--primary); margin:0}
+.info{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:16px; margin-top:12px}
+.info h3{font-size:.95rem; margin:0 0 8px}
+.info p, .info li{font-size:.86rem; color:var(--ink-2); margin:0}
+.info ol{margin:0; padding-left:20px} .info li{margin:4px 0}
+.info .meta{font-size:.76rem; color:var(--ink-3); margin-top:8px}
+.info a{color:var(--primary); word-break:break-all}
+
+/* ---------- タブバー ---------- */
+.tabbar{flex:none; display:flex; border-top:1px solid var(--line); background:var(--surface); padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+.tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:.64rem; font-weight:600; color:var(--ink-3); background:none; border:0; padding:6px 0 2px; min-height:48px; border-radius:8px}
+.tab.is-on{color:var(--primary)}
+.tab svg{width:24px; height:24px}
+
+/* ---------- 詳細シート ---------- */
+.sheet{position:absolute; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; transform:translateY(100%); visibility:hidden; pointer-events:none;
+       transition:transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s linear .28s}
+.sheet.is-open{transform:none; visibility:visible; pointer-events:auto; transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){ .sheet, .sheet.is-open{transition:none} }
+.sheet-bar{display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 12px 0}
+.sheet-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:8px 18px 40px}
+.hero{border-radius:18px; padding:18px; background:var(--surface); box-shadow:var(--shadow); background-image:linear-gradient(160deg, var(--tint), transparent 60%)}
+.hero .cat{font-size:.75rem; color:var(--ink-3); font-weight:600; letter-spacing:.04em; margin:0}
+.hero h2{font-size:1.35rem; line-height:1.35; margin:6px 0 10px; text-wrap:balance}
+.hero .meta{display:flex; flex-direction:column; gap:6px; font-size:.88rem; color:var(--ink-2)}
+.hero .meta div{display:flex; gap:8px; align-items:flex-start}
+.hero .meta svg{width:16px; height:16px; flex:none; margin-top:3px; color:var(--ink-3)}
+.hero .meta a{color:var(--primary); text-decoration:none; font-weight:600}
+.lvl{display:flex; gap:12px; align-items:center; margin-top:14px}
+.lvl .badge{font-size:.85rem; padding:8px 14px}
+.lvl p{margin:0; font-size:.85rem; color:var(--ink-2); line-height:1.45}
+.tabs{display:flex; border-bottom:1px solid var(--line); margin:18px 0 14px}
+.tabs button{flex:1; background:none; border:0; border-bottom:2px solid transparent; padding:10px 0; font-weight:600; color:var(--ink-3); margin-bottom:-1px; min-height:44px}
+.tabs button[aria-selected="true"]{color:var(--primary); border-bottom-color:var(--primary)}
+.prog{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+.prog h3{font-size:1.02rem}
+.mini{display:flex; align-items:center; gap:8px; font-weight:700; font-size:.95rem; color:var(--ink)}
+.mini svg{width:28px; height:28px; transform:rotate(-90deg)}
+.mini .track{fill:none; stroke:var(--ring-track); stroke-width:3.5}
+.mini .bar{fill:none; stroke:var(--accent); stroke-width:3.5; stroke-linecap:round; width:auto; border-radius:0; align-self:auto}
+.mini.is-done .bar{stroke:var(--teal-soft)}
+.ck{display:flex; gap:12px; align-items:center; padding:12px 14px; background:var(--surface); border-radius:14px; box-shadow:var(--shadow); margin-bottom:10px; cursor:pointer}
+.ck .ic{width:38px; height:38px; border-radius:11px; display:grid; place-items:center; flex:none; order:0}
+.ck .ic svg{width:20px; height:20px}
+.ck .tt{flex:1; min-width:0; order:1}
+.ck .tt b{display:block; font-size:.95rem; font-weight:600; line-height:1.35; color:var(--ink)}
+.ck .tt span{display:block; font-size:.8rem; color:var(--ink-3); margin-top:1px}
+.ck input{width:24px; height:24px; accent-color:var(--primary); flex:none; margin:0; order:3}
+.ck.is-done{opacity:.75}
+.ck.is-done .tt b{text-decoration:line-through; color:var(--ink-3)}
+.ck .rm{background:none; border:0; color:var(--ink-3); width:32px; height:32px; display:grid; place-items:center; border-radius:8px; flex:none; order:2}
+.ck .rm svg{width:16px; height:16px}
+.add{display:flex; gap:8px; margin-top:6px}
+.add input{flex:1; min-width:0; padding:10px 14px; min-height:44px; font-size:16px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink)}
+.ai{margin-top:18px; border-radius:16px; padding:14px 16px; background:var(--violet-bg)}
+.ai h3{font-size:.95rem; color:var(--violet); display:flex; align-items:center; gap:8px}
+.ai h3 svg{width:18px; height:18px}
+.ai p{margin:6px 0 0; font-size:.84rem; color:var(--ink-2)}
+.ai .btn{margin-top:10px; background:var(--surface); border-color:transparent; color:var(--violet)}
+.ai ul{list-style:none; margin:10px 0 0; padding:0}
+.ai li{display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid rgba(120,110,200,.18); font-size:.88rem}
+.ai li .tt{flex:1; min-width:0}
+.ai li .tt span{display:block; font-size:.78rem; color:var(--ink-3)}
+.ai .note{font-size:.78rem; color:var(--ink-3); margin-top:8px}
+.memo{width:100%; min-height:180px; padding:12px 14px; font-size:16px; line-height:1.6; border:1px solid var(--line-2); border-radius:14px; background:var(--surface); color:var(--ink); resize:vertical}
+.desc{white-space:pre-wrap; word-break:break-word; font-size:.9rem; color:var(--ink-2); margin:0; line-height:1.6}
+.desc a{color:var(--primary); word-break:break-all}
+.kv{margin:0; padding:0 16px; list-style:none}
+.kv li{display:flex; gap:12px; padding:10px 0; border-top:1px solid var(--line); font-size:.9rem}
+.kv li:first-child{border-top:0}
+.kv li b{width:72px; flex:none; color:var(--ink-3); font-weight:600; font-size:.82rem; padding-top:2px}
+.kv li span{flex:1; min-width:0; word-break:break-word}
+
+.toast{position:absolute; left:50%; bottom:calc(76px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
+       background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:18px; font-size:.85rem; font-weight:600;
+       opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:30; width:max-content; max-width:calc(100% - 32px); text-align:center; line-height:1.4}
+.toast.is-on{opacity:1; transform:translateX(-50%)}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="av-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#C4B5FD"/></linearGradient>
+    <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.8 2z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M9 15l2 2 4-4"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 6.5L16 4l-1 2a3 3 0 0 1-6 0L8 4 3.6 6.5 5 10l2-.5V20h10V9.5l2 .5z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M16 15h2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></symbol>
+    <symbol id="avatar" viewBox="0 0 44 44"><circle cx="22" cy="22" r="21" fill="url(#av-g)"/><ellipse cx="16" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><ellipse cx="28" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="16.9" cy="19.8" r=".9" fill="#fff"/><circle cx="28.9" cy="19.8" r=".9" fill="#fff"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+  <header class="hdr">
+    <div class="brand"><svg><use href="#i-compass"/></svg><span>準備コンパス</span></div>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="btn-refresh" type="button" aria-label="最新の予定を読み込む" title="最新の予定を読み込む"><svg><use href="#i-refresh"/></svg></button>
+      <button class="icon-btn" type="button" data-act="jump-to" data-target="sec-settings" aria-label="設定へ"><svg><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page" id="top">
+      <section class="greet" aria-label="今日のあいさつ">
+        <p class="eyebrow num" id="h-date">読み込み中</p>
+        <h1 id="h-greet">こんにちは</h1>
+        <div class="assistant">
+          <span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span>
+          <div class="bubble" id="h-bubble"><p>予定を読み込んでいます…</p></div>
+        </div>
+        <button class="status" id="h-status" type="button" data-state="loading" data-act="jump-to" data-target="sec-settings">
+          <span class="dot"></span><span class="lbl">予定を読み込んでいます…</span><span class="when num"></span>
+          <svg class="chev"><use href="#i-right"/></svg>
+        </button>
+        <div id="h-notice"></div>
+        <div class="tiles" id="h-tiles" role="group" aria-label="期間ごとの予定数"></div>
+      </section>
+
+      <section class="sec" id="sec-focus" aria-label="今週の注目予定">
+        <div class="sec-h"><h2>今週の注目予定</h2><span class="range" id="focus-note"></span></div>
+        <div id="h-focus"></div>
+      </section>
+
+      <section class="sec" id="sec-tasks" aria-label="要準備のタスク">
+        <div class="sec-h"><h2>要準備のタスク</h2><span class="range">カードの中でそのままチェックできます</span></div>
+        <div class="chips" id="h-chips" role="group" aria-label="期間で絞り込む"></div>
+        <div id="h-tasks"></div>
+      </section>
+
+      <section class="sec" id="sec-cal" aria-label="カレンダー">
+        <div class="sec-h"><h2>カレンダー</h2><span class="range">日付をタップでその日へ</span></div>
+        <div class="seg" id="h-seg" role="group" aria-label="表示する週"></div>
+        <div id="tl-strip"></div>
+        <div id="h-days"></div>
+      </section>
+
+      <section class="sec" id="sec-ai" aria-label="AIアシスタント">
+        <div class="sec-h"><h2>AIアシスタント</h2><span class="range" id="ai-note"></span></div>
+        <div id="h-ai"></div>
+      </section>
+
+      <section class="sec" id="sec-settings" aria-label="設定">
+        <div class="sec-h"><h2>設定</h2><span class="range">表示と連携</span></div>
+        <div id="st-body"></div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="tabbar" aria-label="ページ内の移動">
+    <button class="tab is-on" type="button" data-act="jump-to" data-target="top" aria-current="true"><svg><use href="#i-home"/></svg>ホーム</button>
+    <button class="tab" type="button" data-act="jump-to" data-target="sec-tasks"><svg><use href="#i-list"/></svg>タスク</button>
+    <button class="tab" type="button" data-act="jump-to" data-target="sec-cal"><svg><use href="#i-cal"/></svg>カレンダー</button>
+    <button class="tab" type="button" data-act="jump-to" data-target="sec-ai"><svg><use href="#i-spark"/></svg>AI</button>
+    <button class="tab" type="button" data-act="jump-to" data-target="sec-settings"><svg><use href="#i-gear"/></svg>設定</button>
+  </nav>
+
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" aria-hidden="true">
+    <div class="sheet-bar">
+      <button class="icon-btn" type="button" id="sh-back" data-act="close" aria-label="戻る"><svg><use href="#i-left"/></svg></button>
+      <span class="eyebrow num" id="sh-when"></span>
+      <span style="width:40px"></span>
+    </div>
+    <div class="sheet-body" id="sh-body"></div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   準備コンパス — Googleカレンダーの先の予定から「準備すべきこと」を出す AI秘書
+   データの取り方は3通り: claude.ai の連携（mcp）／ 暗号化された同期データ（GitHub Pages）／ サンプル
+   ============================================================ */
+const SERVER = "Google Calendar";
+const HOLIDAY_CAL = "ja.japanese#holiday@group.v.calendar.google.com";
+const MIN = 60000, DAY = 86400000;
+const WD = "日月火水木金土";
+const FEED_URL = "data/events.enc";
+const PBKDF2_ITER = 100000;
+const CLAUDE_URL = "https://claude.ai/code/artifact/7d1258a3-4227-4de0-8556-4f3a71ca1297";
+
+/* ---------- 端末内の保存（使えない環境でも落ちない） ---------- */
+const MEM = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return (k in MEM) ? MEM[k] : d; } },
+  set(k, v){ MEM[k] = v; try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } },
+  del(k){ delete MEM[k]; try{ localStorage.removeItem(k); }catch(e){} },
+  keys(prefix){ const out = new Set(Object.keys(MEM).filter(k => k.startsWith(prefix))); try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith(prefix)) out.add(k); } }catch(e){} return [...out]; }
+};
+const DEFAULTS = { weeks:3, routine:["会社","出社","在宅","テレワーク","リモート"], calendarId:"", holidays:true, name:"" };
+let S = Object.assign({}, DEFAULTS, store.get("settings", {}));
+if (!Array.isArray(S.routine)) S.routine = DEFAULTS.routine.slice();
+if (![2,3,4].includes(S.weeks)) S.weeks = 3;
+if (typeof S.name !== "string") S.name = "";
+
+/* ---------- 小道具 ---------- */
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2, "0");
+const hhmm = (d) => `${d.getHours()}:${pad(d.getMinutes())}`;
+const dayKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const startOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const md = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+const jpDate = (d) => `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[ch]); }
+function safeHttp(u){ return /^https?:\/\//i.test(String(u || "")) ? String(u) : ""; }
+function localDate(s){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s)); return m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(s); }
+function isoLocal(d){
+  const off = -d.getTimezoneOffset(), sg = off >= 0 ? "+" : "-", a = Math.abs(off);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00${sg}${pad(Math.floor(a/60))}:${pad(a%60)}`;
+}
+function daysUntil(d, now){ return Math.round((startOfDay(d) - startOfDay(now)) / DAY); }
+function relDay(n){ return n <= 0 ? "今日" : n === 1 ? "明日" : n === 2 ? "あさって" : `${n}日後`; }
+function hit(hay, words){ const h = (hay || "").toLowerCase(); return words.some(w => h.includes(String(w).toLowerCase())); }
+function durText(ms){ const m = Math.round(ms/MIN); const h = Math.floor(m/60), r = m%60; return h ? (r ? `${h}時間${r}分` : `${h}時間`) : `${r}分`; }
+function dayClass(d, hol){ return hol ? "is-hol" : d.getDay() === 0 ? "is-sun" : d.getDay() === 6 ? "is-sat" : ""; }
+function tz(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Tokyo"; }catch(e){ return "Asia/Tokyo"; } }
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("is-on"); clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("is-on"), 1800); }
+function weekLabel(w){ return w === 0 ? "今週" : `${w}週間先`; }
+
+/* ---------- 準備のルール ----------
+   kind: doc 資料 / bag 持ち物 / route 移動 / phone 連絡 / bell リマインド / book 予約 / heart 体調 / shirt 服装 / wallet 支払い / check 確認 */
+const KIND = {
+  doc:   { icon:"i-doc",    tone:"blue",   name:"資料" },
+  bag:   { icon:"i-bag",    tone:"green",  name:"持ち物" },
+  route: { icon:"i-route",  tone:"violet", name:"移動" },
+  phone: { icon:"i-phone",  tone:"rose",   name:"連絡" },
+  bell:  { icon:"i-bell",   tone:"amber",  name:"リマインド" },
+  book:  { icon:"i-book",   tone:"blue",   name:"予約" },
+  heart: { icon:"i-heart",  tone:"rose",   name:"体調" },
+  shirt: { icon:"i-shirt",  tone:"violet", name:"服装" },
+  wallet:{ icon:"i-wallet", tone:"amber",  name:"支払い" },
+  check: { icon:"i-check",  tone:"green",  name:"確認" }
+};
+const LEVEL = {
+  prep:  { label:"要準備", hint:"いくつかの準備をしておくと、当日がよりスムーズに進みます。" },
+  check: { label:"確認のみ", hint:"当日までに、予約や時間の確認だけしておけば大丈夫です。" },
+  easy:  { label:"準備不要", hint:"特別な準備はいりません。" },
+  done:  { label:"準備完了", hint:"チェックリストはすべて完了しています。" }
+};
+const I = (kind, title, note, when) => ({ kind, title, note: note || "", when: when || null });
+const RULES = [
+  { key:"trip", label:"出張・旅行", level:"prep",
+    match:["出張","旅行","帰省","新幹線","飛行機","フライト","空港","ホテル","宿泊","トリップ","温泉旅","海外","遠征"],
+    items:[ I("book","交通のチケットを予約","新幹線・飛行機は早めが安心"),
+            I("book","宿泊先の予約を確認","住所とチェックイン時刻"),
+            I("bag","パスポート・ビザの有効期限を確認","残りの有効期間もチェック", ["海外","パスポート","空港","フライト","飛行機","国際"]),
+            I("bag","荷物をまとめる","充電器・着替え・常備薬"),
+            I("route","当日の移動ルートを確認","家を出る時刻を決める"),
+            I("phone","不在の予定を関係者に共有","") ],
+    insight:{ text:"交通チケットの予約と宿泊先の確認を、早めに済ませておきましょう。" } },
+  { key:"medical", label:"通院・検診", level:"prep",
+    match:["病院","医院","クリニック","健康診断","健診","検診","人間ドック","歯医者","歯科","眼科","皮膚科","内科","外科","予防接種","ワクチン","診察","検査","採血","ホワイトニング","通院"],
+    items:[ I("bag","保険証・診察券・お薬手帳","マイナ保険証でも可"),
+            I("heart","前日の飲食・飲酒の制限を確認","案内に「絶食」の指定がないか", ["健康診断","健診","検診","人間ドック","検査","採血"]),
+            I("check","予約時間と受付時間を確認","初診は受付が早い場合も"),
+            I("wallet","支払い方法を確認","現金のみの医院もある") ],
+    insight:{ text:"案内に「絶食」の指定があれば、前日の夜は飲食を控えましょう。保険証など必要なものも準備を。", when:["健康診断","健診","検診","人間ドック","検査","採血"] },
+    insightAlt:{ text:"保険証と診察券を、前日のうちにカバンへ入れておきましょう。" } },
+  { key:"ceremony", label:"行事・お祝い", level:"prep",
+    match:["結婚式","披露宴","二次会","葬儀","告別式","法事","通夜","式典","卒業式","卒園式","卒団式","入学式","入園式","発表会","授賞","誕生日","記念日","パーティー","送別会","歓迎会","歓送迎会","お祝い","祝賀","七五三","成人式"],
+    items:[ I("shirt","服装とドレスコードを確認","靴・バッグも忘れずに"),
+            I("wallet","ご祝儀・お香典を用意","新札・袱紗の用意", ["結婚式","披露宴","葬儀","告別式","法事","通夜"]),
+            I("book","プレゼント・花を手配","当日受け取りの場合は時間も", ["誕生日","記念日","送別会","歓送迎会","お祝い","祝賀"]),
+            I("route","会場と集合時間を確認","") ],
+    insight:{ text:"服装の準備と、ご祝儀やプレゼントの手配を早めに終えておくと安心です。" } },
+  { key:"learning", label:"セミナー・試験", level:"prep",
+    match:["セミナー","勉強会","講座","研修","試験","受験","資格","検定","講義","ワークショップ","説明会","講習"],
+    items:[ I("doc","教材・受講票を準備","事前課題があれば済ませる"),
+            I("bag","筆記用具・身分証","時計も忘れずに", ["試験","受験","資格","検定"]),
+            I("check","開始時刻と会場（または参加URL）を確認",""),
+            I("bell","前日に持ち物を再確認","") ],
+    insight:{ text:"事前課題と持ち物は、早めにそろえておきましょう。" } },
+  { key:"meeting", label:"会議・商談", level:"prep",
+    match:["会議","ミーティング","mtg","打ち合わせ","打合せ","商談","定例","プレゼン","発表","提案","面談","面接","1on1","レビュー","キックオフ","ヒアリング","相談会"],
+    items:[ I("doc","資料の最終版を準備","前回の議事録も見返す"),
+            I("check","アジェンダと目的を整理","決めたいことを1つに絞る"),
+            I("bag","ノートPC・充電器・名刺",""),
+            I("shirt","服装・身だしなみを整える","", ["面接","面談"]) ],
+    insight:{ text:"前回の議事録を見返し、アジェンダは早めに共有しておくとスムーズです。" } },
+  { key:"admin", label:"手続き・用事", level:"prep",
+    match:["役所","区役所","市役所","免許","更新","契約","銀行","郵便局","手続き","申請","確定申告","申告","引越","引っ越し","内見","点検","修理","納車","車検","解約","登録","窓口"],
+    items:[ I("bag","本人確認書類・印鑑","マイナンバーカードなど"),
+            I("doc","必要書類をそろえる","公式サイトで一覧を確認"),
+            I("bell","期限に間に合うか確認","過ぎると手続きが変わることも", ["免許","更新","申請","申告","車検","解約"]),
+            I("check","受付時間と持ち物を確認","予約制のこともある"),
+            I("wallet","手数料の支払い方法","現金のみの窓口もある") ],
+    insight:{ text:"必要書類は前もって確認しておくと、当日の出直しを防げます。" } },
+  { key:"beauty", label:"美容・ケア", level:"check",
+    match:["美容院","美容室","ヘアサロン","ヘアカット","ヘアカラー","カラーリング","パーマ","サロン","眉","脱毛","ネイル","エステ","マッサージ","整体","鍼","まつげ","マツエク"],
+    items:[ I("book","予約時間と店舗を確認",""),
+            I("check","なりたい仕上がりの写真を用意","", ["美容院","美容室","ヘア","パーマ","ネイル","眉"]),
+            I("wallet","支払い方法を確認","") ],
+    insight:{ text:"予約時間と店舗を、前日までに確認しておきましょう。" } },
+  { key:"dining", label:"食事・飲み会", level:"check",
+    match:["飲み","ディナー","ランチ","食事","会食","焼肉","居酒屋","寿司","鍋","カフェ","ご飯","ごはん","宴会","懇親会","打ち上げ","忘年会","新年会","reservation","女子会","同期会","バー","ビアガーデン"],
+    items:[ I("book","店名・人数・予約時間を確認",""),
+            I("route","お店までの行き方を確認",""),
+            I("wallet","支払い方法（割り勘アプリなど）",""),
+            I("phone","遅れそうなときの連絡先","") ],
+    insight:{ text:"予約時間と人数は、早めに確認しておくと安心です。" } },
+  { key:"fun", label:"おでかけ", level:"check",
+    match:["映画","ライブ","コンサート","舞台","観劇","展","美術館","博物館","水族館","動物園","遊園地","フェス","花火","野球","サッカー","観戦","プラネタリウム","イベント","チケット"],
+    items:[ I("bag","チケット（紙・QR）を用意",""),
+            I("check","開場時間と座席を確認",""),
+            I("check","天気予報を確認","中止・順延の可能性も", ["花火","フェス","野球","サッカー","観戦","遊園地"]),
+            I("bag","モバイルバッテリー","") ],
+    insight:{ text:"チケットと開場時間を、前日までに確認しておきましょう。" } },
+  { key:"sports", label:"運動・アウトドア", level:"check",
+    match:["ジム","ヨガ","ピラティス","ゴルフ","テニス","ランニング","マラソン","登山","ハイキング","キャンプ","釣り","サーフィン","スキー","スノボ","フットサル","バスケ","水泳","プール","ボルダリング","サイクリング"],
+    items:[ I("bag","ウェア・シューズ・タオル",""),
+            I("check","天気予報と集合場所を確認",""),
+            I("bag","飲み物・軽食","") ],
+    insight:{ text:"天気予報を早めに見て、持ち物を調整しておきましょう。" } },
+  { key:"family", label:"家族・友人", level:"check",
+    match:["家族","実家","両親","子ども","子供","友人","友達","恋人","デート","集まり","遊び","お出かけ","お茶","参観","保護者会","懇談会","運動会"],
+    items:[ I("check","集合時間と場所を確認",""),
+            I("book","手土産・プレゼントの用意",""),
+            I("phone","当日の連絡手段を確認","") ],
+    insight:null }
+];
+
+/** 「会社」「移動」のような語が、タイトルの先頭で単語として使われているか（「会社説明会」「運転免許更新」は当てない） */
+function startsWord(t, r){ return t === r || (t.startsWith(r) && /^[\s\u3000、,，・（(\[【:：→\-–—\/]/.test(t.slice(r.length))); }
+function isRoutine(ev){ const t = ev.title.trim(); return ev.recurring && S.routine.some(r => r && startsWord(t, r)); }
+function isMove(ev){ const t = ev.title.trim(); return ["移動","電車","バス","運転","家出発"].some(m => startsWord(t, m)); }
+function hasUrl(s){ return /https?:\/\/\S+/i.test(s || ""); }
+
+/** 予定を分類して、レベルとチェックリストの土台を返す */
+function classify(ev){
+  const hay = `${ev.title} ${ev.location}`;
+  if (isRoutine(ev)) return { key:"routine", label:"定型の予定", level:"easy", items:[], insight:null };
+  if (isMove(ev)) return { key:"move", label:"移動", level:"easy", items:[], insight:null };
+  const rule = RULES.find(r => hit(hay, r.match));
+  const items = [];
+  const push = (id, it) => { if (!it.when || hit(hay, it.when)) items.push({ id, kind:it.kind, title:it.title, note:it.note }); };
+  let level, key, label, insight = null;
+  if (rule){
+    key = rule.key; label = rule.label; level = rule.level;
+    rule.items.forEach((it, i) => push(`${rule.key}-${i}`, it));
+    if (rule.insight && (!rule.insight.when || hit(hay, rule.insight.when))) insight = rule.insight.text;
+    else if (rule.insightAlt) insight = rule.insightAlt.text;
+  } else if (ev.allDay){
+    key = "other"; label = "その他の予定"; level = "easy";
+    push("o-0", I("check","予定の内容を確認",""));
+  } else if (ev.location || ev.attendees.length){
+    key = "other"; label = "その他の予定"; level = "check";
+    push("o-0", I("check","場所と開始時刻を確認",""));
+    push("o-1", I("bag","持ち物を確認",""));
+  } else {
+    key = "other"; label = "その他の予定"; level = "easy";
+    push("o-0", I("check","予定の内容を確認",""));
+  }
+  // 予定そのものが持つ手がかりから追加
+  if (ev.attendees.length && !items.some(i => i.kind === "phone") && key !== "fun")
+    push("sig-contact", I("phone","参加者に事前連絡", `${ev.attendees.length}人に時間と場所を共有`));
+  if (ev.location && !ev.allDay && !items.some(i => i.kind === "route"))
+    push("sig-route", I("route","移動時間を確認", ev.location));
+  if (hasUrl(ev.description) && !ev.location)
+    push("sig-url", I("check","参加URLを確認","開始5分前には接続"));
+  if (ev.reservation && !items.some(i => i.kind === "book"))
+    push("sig-book", I("book","予約内容を確認", ev.reservation));
+  return { key, label, level, items, insight };
+}
+
+
+/* ---------- 予定の正規化 ---------- */
+function normalize(payload){
+  const raw = (payload && Array.isArray(payload.events)) ? payload.events : [];
+  const out = [], gmail = [];
+  for (const e of raw){
+    if (!e || e.status === "cancelled") continue;
+    const allDay = !!(e.start && e.start.date && !e.start.dateTime);
+    const s = e.start && (e.start.dateTime || e.start.date);
+    if (!s) continue;
+    const en = e.end && (e.end.dateTime || e.end.date);
+    const start = allDay ? localDate(s) : new Date(s);
+    let end = allDay ? localDate(en || s) : new Date(en || s);
+    if (isNaN(start)) continue;
+    if (isNaN(end) || end < start) end = new Date(start);
+    if (allDay && end > start) end = new Date(end.getTime() - 1); // 終了日は「翌日0:00」で来るので前日の終わりに
+    const attendees = (Array.isArray(e.attendees) ? e.attendees : [])
+      .filter(a => a && !a.self && !a.resource).map(a => a.displayName || a.email || "").filter(Boolean);
+    const ev = {
+      id: String(e.id || `${s}-${e.summary || ""}`),
+      title: String(e.summary || "").trim() || "（タイトルなし）",
+      location: String(e.location || ""), description: String(e.description || ""),
+      allDay, start, end, attendees, link: String(e.htmlLink || ""),
+      recurring: !!e.recurringEventId, fromGmail: e.eventType === "FROM_GMAIL", reservation: ""
+    };
+    (ev.fromGmail ? gmail : out).push(ev);
+  }
+  // Gmailの予約メールから作られた予定は、同じ時間の自分の予定へ「予約情報」として合流
+  for (const g of gmail){
+    const near = o => !o.allDay && Math.abs(o.start - g.start) <= 30 * MIN;
+    const host = out.find(o => near(o) && !o.reservation) || out.find(near);
+    if (host){ host.reservation = g.location || g.title; if (!host.location) host.location = g.location; }
+    else out.push(g);
+  }
+  out.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title, "ja"));
+  return out;
+}
+function prepare(events){ for (const ev of events){ ev.cls = classify(ev); ev.routine = ev.cls.key === "routine"; ev.move = ev.cls.key === "move"; } return events; }
+
+/* ---------- チェック状態 ---------- */
+function itemsOf(ev){ return ev.cls.items.concat(store.get(`custom:${ev.id}`, []).filter(c => c && c.id && c.title)); }
+function checks(ev){ return store.get(`chk:${ev.id}`, {}) || {}; }
+function progress(ev){ const it = itemsOf(ev), c = checks(ev); return { done: it.filter(i => c[i.id]).length, total: it.length }; }
+function effLevel(ev){ const p = progress(ev); return (p.total > 0 && p.done === p.total) ? "done" : ev.cls.level; }
+
+
+/* ---------- 状態 ---------- */
+let EV = [];                                  // 正規化・分類済みの予定
+let META = { ok:false, demo:false, stamp:null, error:null, loading:true, source:"" };
+let HOL = {};                                 // dayKey → 祝日名
+let CALS = null;                              // カレンダー一覧
+let mcp = null, sampleFn = null, unwatch = null, unwatchHol = null, watchedDay = null, retried = false;
+let FEED = { available:false };
+let KEY = store.get("feedKey", "") || "";
+let DETAIL = null, DTAB = "prep";
+let AI = { busy:false, list:null, err:null, forId:null };
+let TASKF = "all", CALW = 0;
+const EXPANDED = new Set();
+let CHAT = { busy:false, q:"", a:"", err:null };
+
+const byId = (id) => EV.find(e => e.id === id) || null;
+function visible(now){
+  const max = S.weeks * 7;
+  return EV.filter(ev => { const d = daysUntil(ev.start, now); const de = daysUntil(ev.end, now); return de >= 0 && d < max; });
+}
+function bucketDay(ev, now){ return Math.max(0, daysUntil(ev.start, now)); }
+function bucketWeek(ev, now){ return Math.floor(bucketDay(ev, now) / 7); }
+
+/* ---------- スコアとインサイト ---------- */
+function scoreFor(events, now){
+  let done = 0, total = 0, urgent = null, hasPrep = false;
+  for (const ev of events){
+    const d = bucketDay(ev, now);
+    if (ev.routine || ev.move || d > 6) continue;
+    const p = progress(ev), w = ev.cls.level === "prep" ? 1 : 0.4;
+    done += p.done * w; total += p.total * w;
+    if (ev.cls.level === "prep" && p.total) hasPrep = true;
+    if (ev.cls.level === "prep" && d <= 2 && p.done < p.total && !urgent) urgent = ev;
+  }
+  if (!total) return { pct:null, tone:"none", urgent:null, hasPrep:false };
+  const pct = Math.round(done / total * 100);
+  const tone = urgent ? "low" : pct >= 80 ? "good" : "warn";
+  return { pct, tone, urgent, hasPrep };
+}
+function insightsFor(events, now){
+  const list = [];
+  for (const ev of events){
+    if (ev.routine || ev.move) continue;
+    const d = bucketDay(ev, now), p = progress(ev);
+    if (p.total === 0 || p.done === p.total) continue;
+    if (!ev.cls.insight && ev.cls.level !== "prep") continue;
+    const text = ev.cls.insight || `チェックリストが残り${p.total - p.done}件。${relDay(d)}までに確認しておきましょう。`;
+    list.push({ id:ev.id, ev, days:d, date:ev.start, title:`${relDay(d)}の${ev.title}`, text, soon: d <= 2 && ev.cls.level === "prep", remain: p.total - p.done });
+  }
+  list.sort((a, b) => a.days - b.days || (b.soon - a.soon));
+  return list;
+}
+
+/* ---------- 描画：共通部品 ---------- */
+function badge(ev){ const l = effLevel(ev); return `<span class="badge ${l}">${LEVEL[l].label}</span>`; }
+function timeText(ev){
+  if (ev.allDay){ const n = daysUntil(ev.end, ev.start) + 1; return n > 1 ? `終日・${n}日間` : "終日"; }
+  return `${hhmm(ev.start)}–${hhmm(ev.end)}`;
+}
+function locHtml(ev){ return ev.location ? `<span class="loc"><svg><use href="#i-pin"/></svg>${esc(ev.location)}</span>` : ""; }
+function kindChip(ev){
+  const c = checks(ev), kinds = [];
+  for (const it of itemsOf(ev)){ if (c[it.id]) continue; const k = (KIND[it.kind] || KIND.check).name; if (!kinds.includes(k)) kinds.push(k); if (kinds.length >= 2) break; }
+  return kinds.length ? `<span class="chip">${esc(kinds.join("・"))}</span>` : "";
+}
+function ringHtml(pct, size, sw){
+  const r = (size - sw) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
+  return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle class="track" cx="${size/2}" cy="${size/2}" r="${r}"/><circle class="bar" cx="${size/2}" cy="${size/2}" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>`;
+}
+function explain(err){
+  const c = err && err.code;
+  if (c === "no_mcp") return ["warn", "このページからはカレンダーを読めません", "claude.ai にログインした状態で、このページの claude.ai のURL（claude.ai/code/artifact/…）を開くと、Google カレンダーの予定を読み込みます。", true];
+  if (c === "need_key") return ["warn", "合言葉を入れると予定を表示します", "このページの予定データは暗号化されています。Macの同期設定で決めた合言葉を入れてください（この端末に保存されます）。"];
+  if (c === "bad_key") return ["err", "合言葉が違うようです", "もう一度入力してください。合言葉は Mac の prep-compass/sync/.secret に書いてあります。"];
+  if (c === "no_feed") return ["warn", "予定データがまだありません", "Mac の同期（準備コンパスの定期タスク）が一度動くと、ここに予定が出ます。", false];
+  if (c === "feed_error") return ["err", "予定データを読み込めませんでした", "通信状況を確認して、右上の更新ボタンを押してください。" + (err.message ? `（詳細: ${String(err.message).slice(0, 100)}）` : "")];
+  if (c === "needs_reauth") return ["err", "Google カレンダーの接続が切れています", "claude.ai の「設定 → コネクター」で Google カレンダーをつなぎ直してください。"];
+  if (c === "server_not_connected") return ["err", "Google カレンダーがつながっていません", "claude.ai の「設定 → コネクター」で Google カレンダーを追加すると、ここに予定が出ます。"];
+  if (c === "selection_required") return ["err", "どのカレンダーを使うか選んでください", "同じ名前のコネクターが複数あります。画面に出る選択肢からひとつ選ぶと読み込めます。"];
+  if (c === "not_in_manifest") return ["err", "このページにカレンダーの利用が許可されていません", "ページを開いたときの確認で「許可」を選ぶと読み込めます。開き直しても表示されないときは、このページを作った人にカレンダー連携の設定を確認してもらってください。"];
+  if (c === "blocked_by_policy" || c === "approval_required") return ["err", "このカレンダーは今の設定では読めません", "会社や学校の Google アカウントでは、組織の設定でカレンダー連携が制限されていることがあります。個人のアカウントでこの表示が出るときは、少し時間を置いてから右上の更新ボタンを押してください。"];
+  if (c === "not_granted" || c === "capability_disabled" || c === "capability_removed") return ["err", "このページからカレンダーを読めません", "claude.ai のアプリ内でこのページを開くと、予定を読み込めます。"];
+  if (c === "server_unavailable" || c === "rate_limited") return ["warn", "カレンダーに一時的につながりません", "しばらくしてから、右上の更新ボタンを押してください。"];
+  const detail = err && err.message ? `（詳細: ${String(err.message).slice(0, 120)}）` : "";
+  if (c === "tool_error") return ["err", "カレンダーがエラーを返しました", "しばらくしてから、右上の更新ボタンをもう一度押してください。" + detail];
+  return ["err", "カレンダーを読み込めませんでした", "しばらくしてからもう一度お試しください。" + detail];
+}
+
+/* ---------- 描画：あいさつ・状態 ---------- */
+function greeting(now){
+  const h = now.getHours();
+  const g = h < 5 ? "こんばんは" : h < 10 ? "おはようございます" : h < 17 ? "こんにちは" : "こんばんは";
+  const icon = (h >= 5 && h < 17) ? "i-sun" : "i-moon";
+  return `${esc(g)}${S.name ? `<span class="nm">${esc(S.name)}さん</span>` : ""}<svg class="wx" aria-hidden="true"><use href="#${icon}"/></svg>`;
+}
+function bubbleText(events, now, sc){
+  const week = events.filter(ev => !ev.routine && !ev.move && bucketDay(ev, now) <= 6);
+  const prep = week.filter(ev => ev.cls.level === "prep");
+  if (META.loading) return "予定を読み込んでいます。少しお待ちください。";
+  if (!META.ok && !META.demo) return "まだ予定を読み込めていません。下の案内を確認してください。";
+  if (!week.length) return "今週は予定が入っていません。ゆっくり過ごせそうです。";
+  if (sc.urgent) return `${relDay(bucketDay(sc.urgent, now))}の「${sc.urgent.title}」の準備が残っています。まずはここから進めましょう。`;
+  if (prep.length && sc.pct === 100) return "今週の準備はすべて整っています。この調子でいきましょう。";
+  if (prep.length) return `今週は準備が必要な予定が${prep.length}件あります。事前準備を進めて、余裕のある一週間にしましょう。`;
+  return `今週の予定は${week.length}件。予約や時間の確認だけ済ませておけば大丈夫です。`;
+}
+function renderStatus(){
+  const st = $("h-status");
+  const when = META.stamp ? `${md(new Date(META.stamp))} ${hhmm(new Date(META.stamp))} 更新` : "";
+  const srcLabel = META.source === "feed" ? "同期した予定を表示中" : "Googleカレンダーと連携中";
+  if (META.loading){ st.dataset.state = "loading"; st.querySelector(".lbl").textContent = "予定を読み込んでいます…"; st.querySelector(".when").textContent = ""; }
+  else if (META.demo){ st.dataset.state = "demo"; st.querySelector(".lbl").textContent = "サンプルの予定を表示中"; st.querySelector(".when").textContent = ""; }
+  else if (META.ok){
+    const stale = META.source === "feed" && META.stamp && (Date.now() - META.stamp) > 8 * 3600000;
+    st.dataset.state = stale ? "demo" : "ok"; st.querySelector(".lbl").textContent = stale ? "しばらく同期されていません" : srcLabel; st.querySelector(".when").textContent = when;
+  }
+  else { st.dataset.state = "error"; st.querySelector(".lbl").textContent = "予定を読み込めません"; st.querySelector(".when").textContent = META.stamp ? `（${hhmm(new Date(META.stamp))}時点の予定を表示）` : ""; }
+
+  if (META.error){
+    let [kind, title, body, offerDemo] = explain(META.error);
+    if (EV.length && META.stamp && !DENIALS.includes(META.error.code)) kind = "warn";
+    const keyForm = (META.error.code === "need_key" || META.error.code === "bad_key")
+      ? `<form class="actions" data-act="key-form"><label class="sr" for="key-in">合言葉</label><input type="password" id="key-in" autocomplete="off" placeholder="合言葉" enterkeyhint="go"><button class="btn small primary" type="submit">表示する</button></form>` : "";
+    $("h-notice").innerHTML = `<div class="notice ${kind}"><h3><svg><use href="#i-alert"/></svg>${esc(title)}</h3><p>${esc(body)}</p>${keyForm}
+      ${offerDemo ? `<div class="actions"><button class="btn small" type="button" data-act="demo">サンプルの予定で試す</button></div>` : ""}</div>`;
+  } else $("h-notice").innerHTML = "";
+}
+function renderGreeting(events, now){
+  $("h-date").textContent = jpDate(now);
+  $("h-greet").innerHTML = greeting(now);
+  const sc = scoreFor(events, now);
+  const ring = sc.pct == null ? "" : `<span class="mini-score num" data-tone="${sc.tone}" aria-label="今週の準備スコア ${sc.pct}">${ringHtml(sc.pct, 48, 5)}<b>${sc.pct}%</b></span>`;
+  $("h-bubble").innerHTML = `<p>${esc(bubbleText(events, now, sc))}</p>${ring}`;
+}
+function renderTiles(events, now){
+  let html = "";
+  for (let w = 0; w < S.weeks; w++){
+    const n = events.filter(ev => !ev.routine && !ev.move && bucketWeek(ev, now) === w).length;
+    html += `<button class="tile${CALW === w ? " is-on" : ""}" type="button" data-act="week" data-w="${w}" aria-pressed="${CALW === w}"><span class="lbl">${w === 0 ? "今週の予定" : `${w}週間先`}</span><b class="num">${n}<small>件</small></b></button>`;
+  }
+  $("h-tiles").innerHTML = html;
+  $("h-tiles").style.gridTemplateColumns = `repeat(${S.weeks}, 1fr)`;
+}
+
+/* ---------- 描画：注目予定 ---------- */
+function renderFocus(events, now){
+  const rank = { prep:0, check:1, easy:2, done:3 };
+  let pool = events.filter(ev => !ev.routine && !ev.move && bucketWeek(ev, now) === 0);
+  let note = "今週";
+  if (!pool.length){ pool = events.filter(ev => !ev.routine && !ev.move); note = "今週の予定はないので、先の予定から"; }
+  pool = pool.slice().sort((a, b) => (rank[effLevel(a)] - rank[effLevel(b)]) || (a.start - b.start)).slice(0, 3);
+  $("focus-note").textContent = pool.length ? note : "";
+  $("h-focus").innerHTML = pool.length ? pool.map(ev => {
+    const d = ev.start, lvl = effLevel(ev);
+    return `<button class="frow" type="button" data-act="open" data-id="${esc(ev.id)}">
+      <span class="bar ${lvl}"></span>
+      <span class="dcol ${dayClass(d, HOL[dayKey(d)])}"><b class="num">${md(d)}</b><span class="num">${WD[d.getDay()]} ${ev.allDay ? "終日" : hhmm(d)}</span></span>
+      <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${badge(ev)}${kindChip(ev)}</span></span>
+      <svg class="chev"><use href="#i-right"/></svg></button>`;
+  }).join("") : `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "注目する予定はありません。"}</p></div>`;
+}
+
+/* ---------- 描画：要準備のタスク ---------- */
+function renderTasks(events, now){
+  const all = events.filter(ev => !ev.routine && !ev.move && itemsOf(ev).length && ev.cls.level !== "easy");
+  const counts = [all.length].concat(Array.from({length:S.weeks}, (_, w) => all.filter(ev => bucketWeek(ev, now) === w).length));
+  if (TASKF !== "all" && (+TASKF >= S.weeks)) TASKF = "all";
+  $("h-chips").innerHTML = [["all", `すべて (${counts[0]})`]].concat(Array.from({length:S.weeks}, (_, w) => [String(w), `${weekLabel(w)} (${counts[w+1]})`]))
+    .map(([k, l]) => `<button type="button" data-act="task-filter" data-f="${k}" aria-pressed="${TASKF === k}">${l}</button>`).join("");
+  const list = TASKF === "all" ? all : all.filter(ev => bucketWeek(ev, now) === +TASKF);
+  $("h-tasks").innerHTML = list.length ? list.map(ev => {
+    const d = bucketDay(ev, now), items = itemsOf(ev), c = checks(ev), open = EXPANDED.has(ev.id);
+    const shown = open ? items : items.slice(0, 3);
+    const rows = shown.map((it, i) => `<label class="cli${c[it.id] ? " is-done" : ""}" for="t-${esc(ev.id)}-${i}"><input type="checkbox" id="t-${esc(ev.id)}-${i}" data-act="check" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}"${c[it.id] ? " checked" : ""}><span>${esc(it.title)}</span></label>`).join("");
+    const more = items.length > 3 ? `<button class="more" type="button" data-act="expand" data-id="${esc(ev.id)}" aria-expanded="${open}">${open ? "閉じる" : `他${items.length - 3}件を見る`}<svg><use href="#${open ? "i-up" : "i-down"}"/></svg></button>` : "";
+    const p = progress(ev), dd = ev.start;
+    return `<article class="task">
+      <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
+        <span class="dcol ${dayClass(dd, HOL[dayKey(dd)])}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
+        <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}</span>
+        <span class="due${d <= 2 && p.done < p.total ? " soon" : ""} num">${p.done === p.total ? "準備完了" : relDay(d)}</span></button>
+      <div class="cl">${rows}${more}</div></article>`;
+  }).join("") : `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "この期間に準備が必要な予定はありません。"}</p></div>`;
+}
+
+/* ---------- 描画：カレンダー ---------- */
+function renderCalendar(byDay, now, today){
+  if (CALW >= S.weeks) CALW = 0;
+  $("h-seg").innerHTML = Array.from({length:S.weeks}, (_, w) => `<button type="button" data-act="week" data-w="${w}" aria-pressed="${CALW === w}">${weekLabel(w)}</button>`).join("");
+  const from = addDays(today, CALW * 7);
+  let strip = `<div class="hdr7">${Array.from({length:7}, (_, j) => { const d = addDays(from, j); return `<span class="${dayClass(d)}">${WD[d.getDay()]}</span>`; }).join("")}</div><div class="wk">`;
+  for (let j = 0; j < 7; j++){
+    const d = addDays(from, j), k = dayKey(d), hol = HOL[k];
+    const evs = (byDay[k] || []).filter(e => !e.routine && !e.move);
+    const dots = evs.slice(0, 3).map(e => `<s class="${e.cls.level}"></s>`).join("");
+    const showMonth = j === 0 || d.getDate() === 1;
+    strip += `<button class="cell ${dayClass(d, hol)}${k === dayKey(today) ? " is-today" : ""}" type="button" data-act="jump" data-day="${k}" aria-label="${jpDate(d)}${hol ? "・" + esc(hol) : ""}、準備を見る予定${evs.length}件">
+      <b class="num">${d.getDate()}</b>${showMonth ? `<span class="m">${d.getMonth()+1}月</span>` : ""}<span class="dots">${dots}</span></button>`;
+  }
+  strip += `</div><div class="legend"><span><i style="background:var(--rose-soft)"></i>要準備</span><span><i style="background:var(--amber-soft)"></i>確認のみ</span><span><i style="background:var(--teal-soft)"></i>準備不要</span></div>`;
+  $("tl-strip").innerHTML = `<div class="strip" role="group" aria-label="${weekLabel(CALW)}の日付">${strip}</div>`;
+
+  let days = "";
+  for (let j = 0; j < 7; j++){
+    const d = addDays(from, j), k = dayKey(d), all = (byDay[k] || []).filter(e => !e.move);
+    if (!all.length) continue;
+    const hol = HOL[k];
+    days += `<div class="cday" id="day-${k}"><h3 class="${k === dayKey(today) ? "is-today" : ""}"><span class="num ${dayClass(d, hol)}">${jpDate(d)}</span>${hol ? `<span class="hol">${esc(hol)}</span>` : ""}</h3>
+      ${all.map(ev => { const lvl = effLevel(ev); return `<button class="crow${ev.routine ? " is-muted" : ""}" type="button" data-act="open" data-id="${esc(ev.id)}">
+        <span class="tm num">${ev.allDay ? `<b>終日</b>${daysUntil(ev.end, ev.start) > 0 ? `${md(ev.start)}〜${md(ev.end)}` : ""}` : `<b>${hhmm(ev.start)}–${hhmm(ev.end)}</b>${durText(ev.end - ev.start)}`}</span>
+        <span class="bar ${ev.routine ? "" : lvl}"></span>
+        <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}</span>${badge(ev)}</button>`; }).join("")}</div>`;
+  }
+  $("h-days").innerHTML = days || `<div class="card" style="margin-top:12px"><p class="empty">${META.loading ? "読み込み中…" : `${weekLabel(CALW)}の予定はありません。`}</p></div>`;
+}
+
+/* ---------- 描画：AIアシスタント ---------- */
+function renderAssistant(events, now){
+  const ins = insightsFor(events, now).slice(0, 3);
+  const cards = ins.map(x => {
+    const c = checks(x.ev), todo = itemsOf(x.ev).filter(it => !c[it.id]).slice(0, 4);
+    const rows = todo.map((it, i) => `<label class="cli" for="a-${esc(x.ev.id)}-${i}"><input type="checkbox" id="a-${esc(x.ev.id)}-${i}" data-act="check" data-ev="${esc(x.ev.id)}" data-item="${esc(it.id)}"><span>${esc(it.title)}</span></label>`).join("");
+    return `<div class="ai-card"><div class="hd"><span class="ic" data-tone="${x.soon ? "rose" : "blue"}"><svg><use href="#i-bulb"/></svg></span>
+      <div><h3>${esc(x.title)}に備えて</h3><p>${esc(x.text)}</p></div></div>
+      ${rows ? `<p class="sub">おすすめのアクション</p>${rows}` : ""}
+      <button class="btn small" type="button" data-act="open" data-id="${esc(x.ev.id)}">チェックリストを開く</button></div>`;
+  }).join("");
+  const askable = !!sampleFn;
+  $("ai-note").textContent = askable ? "" : "相談は claude.ai 版で使えます";
+  let chat = "";
+  if (askable){
+    const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
+    chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
+  }
+  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>${S.weeks}週間先までを見据えて、今からできる準備を提案します。</p></div>
+    ${cards || `<div class="card" style="margin-top:12px"><p class="empty">${META.loading ? "読み込み中…" : "いまのところ、先回りしておくことはありません。"}</p></div>`}${chat}`;
+}
+async function askAssistant(q){
+  if (!sampleFn || CHAT.busy || !q) return;
+  const now = new Date();
+  const ctx = visible(now).filter(ev => !ev.move).slice(0, 30).map(ev => {
+    const p = progress(ev), c = checks(ev), todo = itemsOf(ev).filter(it => !c[it.id]).map(it => it.title).slice(0, 5);
+    return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}${p.total ? ` 残り${p.total - p.done}/${p.total}` : ""}]${todo.length ? `：${todo.join("、")}` : ""}`;
+  }).join("\n");
+  CHAT = { busy:true, q, a:"", err:null }; renderHome();
+  const prompt = `あなたは「準備コンパス」というアプリのAI秘書です。ユーザーの今後の予定と準備状況をもとに、質問に日本語で答えてください。
+
+今日: ${jpDate(now)}
+今後の予定（先頭から日付順。[ ]は準備の重さと残り項目）:
+${ctx || "（予定はありません）"}
+
+ユーザーの質問: ${q.slice(0, 500)}
+
+条件: 予定に基づいて具体的に。250字以内、箇条書き可。わからないことは推測せず「予定からは分かりません」と言う。`;
+  try{
+    const res = await sampleFn(prompt, { modelTier:"quick", onText: ({ text }) => { CHAT.a = text; const el = document.querySelector("#h-ai .answer"); if (el) el.innerHTML = `<p class="q">Q. ${esc(CHAT.q)}</p>${esc(text)}`; } });
+    CHAT = { busy:false, q, a:res.text, err: res.truncated ? "（長くなったので途中までです）" : null };
+  }catch(e){
+    const c = e && e.code;
+    if (["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(c)){ sampleFn = null; CHAT = { busy:false, q:"", a:"", err:null }; }
+    else CHAT = { busy:false, q, a: (e && e.text) || "", err: c === "rate_limited" ? "混み合っています。少し待ってからもう一度お試しください。" : c === "cancelled" ? "中止しました。" : "答えを受け取れませんでした。しばらくしてからお試しください。" };
+  }
+  renderHome();
+}
+
+/* ---------- 描画：ホーム全体 ---------- */
+function renderHome(){
+  const now = new Date(), today = startOfDay(now);
+  renderStatus();
+  const events = visible(now);
+  const byDay = {};
+  for (const ev of events){ const k = dayKey(addDays(today, bucketDay(ev, now))); (byDay[k] = byDay[k] || []).push(ev); }
+  renderGreeting(events, now);
+  renderTiles(events, now);
+  renderFocus(events, now);
+  renderTasks(events, now);
+  renderCalendar(byDay, now, today);
+  renderAssistant(events, now);
+}
+
+/* ---------- 描画：設定（入力中は描き直さない） ---------- */
+function renderSettings(){
+  const box = $("st-body");
+  if (document.activeElement && document.activeElement !== document.body && box.contains(document.activeElement)) return;
+  const calOpts = (CALS || []).map(c => `<option value="${esc(c.id)}"${S.calendarId === c.id ? " selected" : ""}>${esc(c.summary || c.id)}</option>`).join("");
+  const feedMode = !mcp && (FEED.available || KEY);
+  box.innerHTML = `
+    <div class="field"><label for="st-name">呼び名（任意）</label><p class="help">あいさつに使います。空欄でも大丈夫です。</p>
+      <input type="text" id="st-name" value="${esc(S.name)}" data-act="name" autocomplete="off" placeholder="例：山田"></div>
+    <div class="field"><span class="lbl">表示する期間</span><p class="help">今週から何週間先までを表示するかです。</p>
+      <div class="seg" role="group" aria-label="表示する期間">${[2,3,4].map(w => `<button type="button" data-act="weeks" data-w="${w}" aria-pressed="${S.weeks === w}">${w}週間</button>`).join("")}</div></div>
+    ${mcp ? `<div class="field"><label for="st-cal">読み込むカレンダー</label><p class="help">通常はメインのカレンダーのままで大丈夫です。</p>
+      <select id="st-cal" data-act="cal"><option value=""${S.calendarId ? "" : " selected"}>メインのカレンダー</option>${calOpts}</select>
+      ${CALS == null ? `<p class="help" style="margin-top:6px">カレンダーの一覧を読み込んでいます…</p>` : ""}</div>` : ""}
+    ${feedMode ? `<div class="field"><label for="st-key">合言葉</label><p class="help">同期された予定データを開くための合言葉です。この端末にだけ保存されます。</p>
+      <input type="password" id="st-key" value="${esc(KEY)}" data-act="key" autocomplete="off"></div>` : ""}
+    <div class="field"><label class="switch" for="st-hol"><span>祝日を表示する<br><span class="help" style="display:block;margin:0">日本の祝日カレンダーを読み込みます</span></span><input type="checkbox" id="st-hol" data-act="hol"${S.holidays ? " checked" : ""}></label></div>
+    <div class="field"><label for="st-routine">定型の予定としてまとめる</label><p class="help">Google カレンダーで「繰り返し」に設定した予定のうち、この言葉で始まるものを「準備不要」としてまとめます（毎回別々に入れる美容院やジムには効きません）。読点（、）かカンマで区切ってください。</p>
+      <input type="text" id="st-routine" value="${esc(S.routine.join("、"))}" data-act="routine" autocomplete="off"></div>
+    <div class="toolbar"><button class="btn" type="button" data-act="refresh"><svg><use href="#i-refresh"/></svg>最新の予定を読み込む</button>
+      <button class="btn danger" type="button" data-act="wipe">チェックとメモを消去</button></div>
+    <div class="info"><h3>ホーム画面に追加する</h3><ol><li>iPhone の Safari でこのページを開く</li><li>下の共有ボタン（□に↑）をタップ</li><li>「ホーム画面に追加」を選ぶ</li></ol><p class="meta">アプリのように起動できます。</p></div>
+    <div class="info"><h3>このアプリについて</h3>
+      <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。チェック・メモ・設定はこの端末の中だけに保存され、外部には送られません。</p>
+      <p style="margin-top:8px">${mcp ? "「AIに追加の提案をもらう」や AI への相談を使ったときだけ、その予定の内容が claude.ai の Claude に送られます。" : `AIへの相談は <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> で使えます。`}</p>
+      <p class="meta">準備の判定は、予定のタイトルと場所のキーワードから決めています。判定が合わないときは、詳細画面で項目を自由に足せます。</p></div>`;
+}
+
+/* ---------- 描画：詳細シート ---------- */
+function openDetail(id){
+  const ev = byId(id); if (!ev) return;
+  DETAIL = id; DTAB = "prep";
+  if (AI.forId !== id) AI = { busy:false, list:null, err:null, forId:id };
+  renderDetail();
+  const sh = $("sheet"); sh.classList.add("is-open"); sh.setAttribute("aria-hidden", "false");
+  $("main").inert = true; document.querySelector(".tabbar").inert = true; document.querySelector(".hdr").inert = true;
+  $("sh-body").scrollTop = 0;
+  setTimeout(() => $("sh-back").focus(), 50);
+}
+function closeDetail(){
+  flushMemo();
+  const sh = $("sheet"); sh.classList.remove("is-open"); sh.setAttribute("aria-hidden", "true");
+  $("main").inert = false; document.querySelector(".tabbar").inert = false; document.querySelector(".hdr").inert = false;
+  const id = DETAIL; DETAIL = null;
+  renderHome();
+  const back = document.querySelector(`[data-act="open"][data-id="${CSS.escape(id || "")}"]`) || document.querySelector(".tab.is-on");
+  if (back) back.focus();
+}
+function linkify(text){
+  const parts = String(text || "").split(/(https?:\/\/[^\s<>"']+)/g);
+  return parts.map((p, i) => i % 2 ? `<a href="${esc(p)}" target="_blank" rel="noopener noreferrer">${esc(p)}</a>` : esc(p)).join("");
+}
+function renderDetail(){
+  const ev = byId(DETAIL); if (!ev) return;
+  const ae = document.activeElement;
+  if (DTAB === "memo" && ae && ae.dataset && ae.dataset.act === "memo"){ flushMemo(); return; }
+  const now = new Date(), d = bucketDay(ev, now), lvl = effLevel(ev);
+  $("sh-when").textContent = `${jpDate(ev.start)}・${relDay(d)}`;
+  const when = ev.allDay ? `${timeText(ev)}${daysUntil(ev.end, ev.start) > 0 ? `（${md(ev.start)}〜${md(ev.end)}）` : ""}` : `${hhmm(ev.start)}–${hhmm(ev.end)}（${durText(ev.end - ev.start)}）`;
+  const meta = [
+    `<div><svg><use href="#i-clock"/></svg><span class="num">${esc(when)}</span></div>`,
+    ev.location ? `<div><svg><use href="#i-pin"/></svg><a href="https://maps.apple.com/?q=${encodeURIComponent(ev.location)}" target="_blank" rel="noopener noreferrer">${esc(ev.location)}</a></div>` : "",
+    ev.attendees.length ? `<div><svg><use href="#i-users"/></svg><span>${esc(ev.attendees.slice(0, 4).join("、"))}${ev.attendees.length > 4 ? ` ほか${ev.attendees.length - 4}人` : ""}</span></div>` : ""
+  ].join("");
+  const tabs = [["overview","概要"],["prep","事前準備"],["memo","メモ"]].map(([k, n]) => `<button type="button" role="tab" aria-selected="${DTAB === k}" data-act="dtab" data-t="${k}">${n}</button>`).join("");
+  let body = "";
+  if (DTAB === "prep") body = prepHtml(ev);
+  else if (DTAB === "memo"){
+    const memo = store.get(`memo:${ev.id}`, "");
+    body = `<label class="sr" for="memo">メモ</label><textarea class="memo" id="memo" placeholder="持ち物の詳細や、当日に思い出したいことを書いておけます。" data-act="memo">${esc(memo)}</textarea><p class="help" style="font-size:.78rem;color:var(--ink-3);margin:8px 0 0">入力すると自動で保存されます（この端末のみ）。</p>`;
+  } else {
+    const kv = [
+      ["日時", `<span class="num">${esc(jpDate(ev.start))} ${esc(when)}</span>`],
+      ev.location ? ["場所", esc(ev.location)] : null,
+      ev.attendees.length ? ["参加者", esc(ev.attendees.join("、"))] : null,
+      ev.reservation ? ["予約情報", esc(ev.reservation)] : null,
+      ["分類", `${esc(ev.cls.label)}・${LEVEL[ev.cls.level].label}`]
+    ].filter(Boolean).map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("");
+    body = `<div class="card"><ul class="kv">${kv}</ul></div>
+      ${ev.description ? `<div class="info"><h3>説明</h3><p class="desc">${linkify(ev.description.slice(0, 2000))}${ev.description.length > 2000 ? "…" : ""}</p></div>` : ""}
+      ${safeHttp(ev.link) ? `<div class="toolbar"><a class="btn" href="${esc(safeHttp(ev.link))}" target="_blank" rel="noopener noreferrer"><svg><use href="#i-ext"/></svg>Googleカレンダーで開く</a></div>` : ""}`;
+  }
+  $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div>
+      <div class="lvl"><span class="badge ${lvl}">${LEVEL[lvl].label}</span><p>${LEVEL[lvl].hint}</p></div></section>
+    <div class="tabs" role="tablist">${tabs}</div>${body}`;
+}
+function prepHtml(ev){
+  const items = itemsOf(ev), c = checks(ev), p = progress(ev);
+  const rows = items.map((it, i) => {
+    const k = KIND[it.kind] || KIND.check, on = !!c[it.id], custom = String(it.id).startsWith("c-"), cid = `ck-${i}`;
+    return `<label class="ck${on ? " is-done" : ""}" for="${cid}"><input type="checkbox" id="${cid}" data-act="check" data-item="${esc(it.id)}"${on ? " checked" : ""} aria-label="${esc(it.title)}">
+      <span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span>
+      <span class="tt"><span class="sr">${esc(k.name)}：</span><b>${esc(it.title)}</b>${it.note ? `<span>${esc(it.note)}</span>` : ""}</span>
+      ${custom ? `<button class="rm" type="button" data-act="rm-item" data-item="${esc(it.id)}" aria-label="この項目を削除"><svg><use href="#i-x"/></svg></button>` : ""}</label>`;
+  }).join("");
+  const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  let ai = "";
+  if (sampleFn){
+    let inner = "";
+    if (AI.forId === ev.id && AI.busy) inner = `<p class="note">考え中…（数秒かかります）</p>`;
+    else if (AI.forId === ev.id && AI.err) inner = `<p class="note">${esc(AI.err)}</p><button class="btn small" type="button" data-act="ai">もう一度</button>`;
+    else if (AI.forId === ev.id && AI.list){
+      inner = AI.list.length ? `<ul>${AI.list.map((s, i) => `<li><span class="tt">${esc(s.title)}${s.note ? `<span>${esc(s.note)}</span>` : ""}</span><button class="btn small" type="button" data-act="ai-add" data-i="${i}"><svg><use href="#i-plus"/></svg>追加</button></li>`).join("")}</ul>`
+        : `<p class="note">今のチェックリストで十分そうです。</p>`;
+    } else inner = `<button class="btn small" type="button" data-act="ai"><svg><use href="#i-spark"/></svg>AIに追加の提案をもらう</button>`;
+    ai = `<div class="ai"><h3><svg><use href="#i-spark"/></svg>AIからの追加提案</h3><p>この予定の内容をもとに、見落としがちな準備を3つまで提案します。</p>${inner}</div>`;
+  }
+  return `<div class="prog"><h3>事前準備チェックリスト</h3><span class="mini num${p.total && p.done === p.total ? " is-done" : ""}">${ringHtml(pct, 28, 3.5)}${p.done}/${p.total}</span></div>
+    ${rows || `<p class="empty">${ev.routine ? "定型の予定なので、特別な準備はいりません。" : "この予定には準備の項目がありません。"}下から自由に追加できます。</p>`}
+    <div class="add"><label class="sr" for="add-item">項目を追加</label><input type="text" id="add-item" placeholder="項目を追加（例：手土産を買う）" autocomplete="off" enterkeyhint="done"><button class="btn primary" type="button" data-act="add-item" aria-label="追加"><svg><use href="#i-plus"/></svg></button></div>
+    ${ai}
+    ${p.total ? `<div class="toolbar"><button class="btn small" type="button" data-act="uncheck">チェックをすべて外す</button></div>` : ""}`;
+}
+
+/* ---------- AIの追加提案（claude.ai の sample 機能） ---------- */
+async function askAI(ev){
+  if (!sampleFn || AI.busy) return;
+  AI = { busy:true, list:null, err:null, forId:ev.id }; renderDetail();
+  const items = itemsOf(ev).map(i => `- ${i.title}${i.note ? `（${i.note}）` : ""}`).join("\n") || "（なし）";
+  const prompt = `あなたは予定の事前準備を手伝うアシスタントです。次の予定について、まだチェックリストに無い「事前にやっておくとよいこと」を、日本語で最大3つ提案してください。
+
+予定: ${ev.title}
+日時: ${jpDate(ev.start)} ${ev.allDay ? "終日" : `${hhmm(ev.start)}–${hhmm(ev.end)}`}
+場所: ${ev.location || "未記入"}
+参加者: ${ev.attendees.length ? ev.attendees.join("、") : "未記入"}
+説明: ${(ev.description || "").replace(/\s+/g, " ").slice(0, 600) || "なし"}
+
+既にあるチェックリスト:
+${items}
+
+条件: 既存の項目と重複しない。具体的で短い（titleは20字以内）。この予定の性質に合わないものは出さない。十分なら空配列でよい。
+出力は次の形のJSON配列のみ: [{"title":"○○を確認する","note":"補足を20字以内"}]`;
+  try{
+    const res = await sampleFn.json(prompt, { modelTier:"quick" });
+    const list = Array.isArray(res) ? res.filter(x => x && typeof x.title === "string" && x.title.trim())
+      .slice(0, 3).map(x => ({ title:x.title.trim().slice(0, 60), note: typeof x.note === "string" ? x.note.trim().slice(0, 80) : "" })) : [];
+    AI = { busy:false, list, err:null, forId:ev.id };
+  }catch(e){
+    const c = e && e.code;
+    if (["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(c)){ sampleFn = null; AI = { busy:false, list:null, err:null, forId:ev.id }; }
+    else AI = { busy:false, list:null, forId:ev.id,
+      err: c === "rate_limited" ? "混み合っています。少し待ってからもう一度お試しください。"
+         : c === "invalid_json" ? "提案をうまく読み取れませんでした。もう一度お試しください。"
+         : c === "cancelled" ? "中止しました。"
+         : "提案を受け取れませんでした。しばらくしてからお試しください。" };
+  }
+  if (DETAIL === ev.id) renderDetail();
+}
+
+/* ---------- ページ内の移動と描画のまとめ ---------- */
+function renderAll(){ renderHome(); if (DETAIL) renderDetail(); }
+const SPY = ["top","sec-tasks","sec-cal","sec-ai","sec-settings"];
+const smooth = () => (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
+function setActiveTab(id){
+  document.querySelectorAll(".tab").forEach(b => { const on = b.dataset.target === id; b.classList.toggle("is-on", on); if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
+}
+function scrollMainTo(el, offset){ $("main").scrollTo({ top: Math.max(0, el.offsetTop - (offset || 8)), behavior: smooth() }); }
+function jumpTo(id){
+  if (id === "top"){ $("main").scrollTo({ top:0, behavior: smooth() }); setActiveTab("top"); return; }
+  const el = document.getElementById(id); if (!el) return;
+  scrollMainTo(el, 8); setActiveTab(id);
+}
+let spyTick = false;
+$("main").addEventListener("scroll", () => {
+  if (spyTick) return; spyTick = true;
+  requestAnimationFrame(() => {
+    spyTick = false;
+    const y = $("main").scrollTop + 160; let cur = "top";
+    for (const id of SPY){ const el = document.getElementById(id); if (el && el.offsetTop <= y) cur = id; }
+    setActiveTab(cur);
+  });
+}, { passive:true });
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act;
+  if (act === "jump-to"){ jumpTo(el.dataset.target); return; }
+  if (act === "open"){ openDetail(el.dataset.id); return; }
+  if (act === "close"){ closeDetail(); return; }
+  if (act === "jump"){ const t = document.getElementById(`day-${el.dataset.day}`); if (t) scrollMainTo(t, 8); else toast("この日は予定がありません"); return; }
+  if (act === "week"){ CALW = +el.dataset.w; renderHome(); if (el.classList.contains("tile")) jumpTo("sec-cal"); return; }
+  if (act === "task-filter"){ TASKF = el.dataset.f; renderHome(); return; }
+  if (act === "expand"){ const id = el.dataset.id; if (EXPANDED.has(id)) EXPANDED.delete(id); else EXPANDED.add(id); renderHome(); return; }
+  if (act === "dtab"){ DTAB = el.dataset.t; renderDetail(); return; }
+  if (act === "demo"){ loadDemo(); return; }
+  if (act === "refresh"){ refresh(); return; }
+  if (act === "weeks"){ S.weeks = +el.dataset.w; saveSettings(); if (mcp) startWatch(true); else if (META.demo) loadDemo(); renderAll(); renderSettings(); return; }
+  if (act === "wipe"){
+    if (el.dataset.armed !== "1"){
+      el.dataset.armed = "1"; el.textContent = "本当に消去する（もう一度タップ）";
+      clearTimeout(el._t); el._t = setTimeout(() => { el.dataset.armed = ""; el.textContent = "チェックとメモを消去"; }, 5000);
+      return;
+    }
+    ["chk:","custom:","memo:"].forEach(p => store.keys(p).forEach(k => store.del(k)));
+    AI = { busy:false, list:null, err:null, forId:null }; renderAll(); toast("消去しました"); return;
+  }
+  const ev = DETAIL && byId(DETAIL);
+  if (!ev) return;
+  if (act === "add-item"){ addCustom(ev); return; }
+  if (act === "rm-item"){ store.set(`custom:${ev.id}`, store.get(`custom:${ev.id}`, []).filter(c => c.id !== el.dataset.item)); const c = checks(ev); delete c[el.dataset.item]; store.set(`chk:${ev.id}`, c); renderDetail(); return; }
+  if (act === "uncheck"){ store.del(`chk:${ev.id}`); renderDetail(); toast("チェックを外しました"); return; }
+  if (act === "ai"){ askAI(ev); return; }
+  if (act === "ai-add"){
+    const s = AI.list && AI.list[+el.dataset.i]; if (!s) return;
+    const list = store.get(`custom:${ev.id}`, []); list.push({ id:`c-${Date.now()}`, kind:"check", title:s.title, note:s.note || "" });
+    store.set(`custom:${ev.id}`, list); AI.list = AI.list.filter((_, i) => i !== +el.dataset.i); renderDetail(); toast("追加しました"); return;
+  }
+});
+document.addEventListener("submit", (e) => {
+  const f = e.target.closest("[data-act]"); if (!f) return;
+  if (f.dataset.act === "key-form"){ e.preventDefault(); const v = ($("key-in") && $("key-in").value || "").trim(); if (!v) return; KEY = v; store.set("feedKey", KEY); loadFeed(true); return; }
+  if (f.dataset.act === "ask-form"){ e.preventDefault(); const v = ($("ask-in") && $("ask-in").value || "").trim(); if (v) askAssistant(v); return; }
+});
+document.addEventListener("change", (e) => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act;
+  if (act === "check"){
+    const ev = byId(el.dataset.ev || DETAIL); if (!ev) return;
+    const c = checks(ev); if (el.checked) c[el.dataset.item] = true; else delete c[el.dataset.item];
+    if (!store.set(`chk:${ev.id}`, c)) warnSave();
+    renderAll(); return;
+  }
+  if (act === "hol"){ S.holidays = el.checked; saveSettings(); if (!S.holidays) HOL = {}; if (mcp) startHolidayWatch(); else if (FEED.available) loadFeed(false); renderHome(); return; }
+  if (act === "cal"){ S.calendarId = el.value; saveSettings(); if (mcp){ EV = []; META.stamp = null; startWatch(true); } return; }
+  if (act === "routine"){ S.routine = el.value.split(/[、,，\s]+/).map(s => s.trim()).filter(Boolean); saveSettings(); prepare(EV); renderHome(); toast("保存しました"); return; }
+  if (act === "name"){ S.name = el.value.trim().slice(0, 20); saveSettings(); renderHome(); toast("保存しました"); return; }
+  if (act === "key"){ KEY = el.value.trim(); store.set("feedKey", KEY); if (KEY) loadFeed(true); return; }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target && e.target.id === "add-item"){ e.preventDefault(); const ev = DETAIL && byId(DETAIL); if (ev) addCustom(ev); }
+  if (e.key === "Escape" && DETAIL) closeDetail();
+});
+let memoTimer = null, memoPending = null, warnedSave = false;
+function warnSave(){ if (warnedSave) return; warnedSave = true; toast("保存できませんでした。プライベートブラウズでは保存されません"); }
+function flushMemo(){
+  clearTimeout(memoTimer); memoTimer = null;
+  if (!memoPending) return;
+  const { id, value } = memoPending; memoPending = null;
+  if (!store.set(`memo:${id}`, value)) warnSave();
+}
+document.addEventListener("input", (e) => {
+  const el = e.target; if (!el || el.dataset.act !== "memo" || !DETAIL) return;
+  memoPending = { id: DETAIL, value: el.value };
+  clearTimeout(memoTimer); memoTimer = setTimeout(flushMemo, 400);
+});
+document.addEventListener("focusout", (e) => { if (e.target && e.target.dataset && e.target.dataset.act === "memo") flushMemo(); });
+function addCustom(ev){
+  const inp = $("add-item"); const v = (inp && inp.value || "").trim(); if (!v) return;
+  const list = store.get(`custom:${ev.id}`, []); list.push({ id:`c-${Date.now()}`, kind:"check", title:v.slice(0, 80), note:"" });
+  if (!store.set(`custom:${ev.id}`, list)) warnSave();
+  renderDetail(); const again = $("add-item"); if (again) again.focus();
+}
+function saveSettings(){ store.set("settings", S); }
+
+/* ---------- カレンダー取得 ---------- */
+function windowArgs(now){
+  const from = startOfDay(now), to = addDays(from, S.weeks * 7);
+  const args = { startTime: isoLocal(from), endTime: isoLocal(to), orderBy:"startTime", pageSize:250, timeZone: tz() };
+  if (S.calendarId) args.calendarId = S.calendarId;
+  return args;
+}
+const DENIALS = ["needs_reauth","server_not_connected","selection_required","blocked_by_policy","approval_required","not_granted","capability_disabled","capability_removed","not_in_manifest"];
+
+async function applyPayload(result, input){
+  let payload = result && result.payload;
+  if (typeof payload === "string"){ try{ payload = JSON.parse(payload); }catch(e){ payload = null; } }
+  let events = (payload && Array.isArray(payload.events)) ? payload.events.slice() : [];
+  // 念のため続きのページも読む（予定が250件を超えるとき）
+  let token = payload && payload.nextPageToken, pages = 0;
+  while (token && pages < 3 && mcp){
+    try{
+      const r = await mcp.callTool(SERVER, "list_events", Object.assign({}, input, { pageToken: token }), { cache:{ staleTime:60000 } });
+      let p = r && r.payload; if (typeof p === "string"){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
+      if (p && Array.isArray(p.events)) events = events.concat(p.events); token = p && p.nextPageToken; pages++;
+    }catch(e){ break; }
+  }
+  EV = prepare(normalize({ events }));
+  META = { ok:true, demo:false, loading:false, error:null, stamp: (result && result.cache && result.cache.storedAt) || Date.now() };
+  renderAll();
+}
+function startWatch(force){
+  if (!mcp) return;
+  if (unwatch){ unwatch(); unwatch = null; }
+  const now = new Date(); watchedDay = dayKey(now); const input = windowArgs(now);
+  META.loading = !!force || !META.ok; retried = false; renderHome();
+  unwatch = mcp.watchTool(SERVER, "list_events", input, (ev) => {
+    if (ev.type === "data"){ retried = false; applyPayload(ev.result, input); return; }
+    const err = ev.error || {};
+    if (DENIALS.includes(err.code)){ EV = []; META = { ok:false, demo:false, loading:false, error:err, stamp:null }; }
+    else META = Object.assign({}, META, { loading:false, error:err, ok: META.ok && EV.length > 0 });
+    renderAll();
+    if (err.retryable && !retried){ retried = true; setTimeout(() => refresh(true), Math.min(err.retryAfterMs || 4000, 60000) + Math.random() * 1000); }
+  }, { cache:{ staleTime:60000 }, refetchInterval:300000 });
+  startHolidayWatch();
+}
+function startHolidayWatch(){
+  if (unwatchHol){ unwatchHol(); unwatchHol = null; }
+  if (!mcp || !S.holidays){ HOL = {}; return; }
+  const input = Object.assign(windowArgs(new Date()), { calendarId: HOLIDAY_CAL, pageSize: 50 });
+  unwatchHol = mcp.watchTool(SERVER, "list_events", input, (ev) => {
+    if (ev.type !== "data"){ return; }           // 祝日は飾りなので、失敗しても本体には影響させない
+    let p = ev.result && ev.result.payload; if (typeof p === "string"){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
+    const map = {};
+    for (const e of (p && Array.isArray(p.events) ? p.events : [])){
+      const s = e && e.start && (e.start.date || e.start.dateTime); if (!s || e.status === "cancelled") continue;
+      map[dayKey(e.start.date ? localDate(s) : new Date(s))] = String(e.summary || "祝日");
+    }
+    HOL = map; renderHome();
+  }, { cache:{ staleTime:300000 }, refetchInterval:3600000 });
+}
+async function refresh(silent){
+  if (!mcp){
+    if (FEED.available || KEY){ await loadFeed(true); if (!silent && META.ok) toast("予定を更新しました"); return; }
+    if (META.demo){ loadDemo(); return; }
+    if (!silent) toast("claude.ai で開くと読み込めます"); return;
+  }
+  const btn = $("btn-refresh"); btn.classList.add("is-spin"); btn.disabled = true;
+  const input = windowArgs(new Date());
+  try{
+    const r = await mcp.callTool(SERVER, "list_events", input, { cache:{ refresh:true } });
+    await applyPayload(r, input); if (!silent) toast("予定を更新しました");
+  }catch(err){
+    if (DENIALS.includes(err && err.code)){ EV = []; META = { ok:false, demo:false, loading:false, error:err, stamp:null }; }
+    else META = Object.assign({}, META, { loading:false, error:err });
+    renderAll();
+  }finally{ btn.classList.remove("is-spin"); btn.disabled = false; }
+}
+async function loadCalendars(){
+  if (!mcp) return;
+  try{
+    const r = await mcp.callTool(SERVER, "list_calendars", { pageSize: 100 }, { cache:{ staleTime:300000 } });
+    let p = r && r.payload; if (typeof p === "string"){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
+    CALS = (p && Array.isArray(p.calendars) ? p.calendars : []).filter(c => c && c.id && !String(c.id).includes("holiday@group.v.calendar.google.com"));
+  }catch(e){ CALS = []; }
+  renderSettings();
+}
+
+
+/* ---------- 同期データ（GitHub Pages 版）: OpenSSL enc -aes-256-cbc -pbkdf2 形式を復号 ---------- */
+async function decryptFeed(buf, pass){
+  const u = new Uint8Array(buf);
+  if (u.length < 32 || String.fromCharCode.apply(null, u.slice(0, 8)) !== "Salted__") throw Object.assign(new Error("形式が違います"), { code:"feed_error" });
+  const salt = u.slice(8, 16), data = u.slice(16);
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name:"PBKDF2", hash:"SHA-256", salt, iterations: PBKDF2_ITER }, km, 384));
+  const key = await crypto.subtle.importKey("raw", bits.slice(0, 32), { name:"AES-CBC" }, false, ["decrypt"]);
+  let plain;
+  try{ plain = await crypto.subtle.decrypt({ name:"AES-CBC", iv: bits.slice(32, 48) }, key, data); }
+  catch(e){ throw Object.assign(new Error("bad key"), { code:"bad_key" }); }
+  return new TextDecoder().decode(plain);
+}
+async function loadFeed(force){
+  META.loading = true; renderHome();
+  try{
+    const r = await fetch(`${FEED_URL}?t=${force ? Date.now() : Math.floor(Date.now() / 300000)}`, { cache:"no-store" });
+    if (r.status === 404){ FEED.available = false; META = { ok:false, demo:false, loading:false, error:{ code:"no_feed" }, stamp:null, source:"feed" }; renderAll(); return; }
+    if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { code:"feed_error" });
+    const buf = await r.arrayBuffer();
+    FEED.available = true;
+    if (!KEY){ META = { ok:false, demo:false, loading:false, error:{ code:"need_key" }, stamp:null, source:"feed" }; renderAll(); renderSettings(); return; }
+    let payload;
+    try{ payload = JSON.parse(await decryptFeed(buf, KEY)); }
+    catch(e){ if (e && e.code === "feed_error") throw e; throw Object.assign(new Error("bad key"), { code:"bad_key" }); }
+    EV = prepare(normalize(payload));
+    const map = {};
+    if (S.holidays) for (const e of (Array.isArray(payload.holidays) ? payload.holidays : [])){
+      const s = e && e.start && (e.start.date || e.start.dateTime); if (!s || e.status === "cancelled") continue;
+      map[dayKey(e.start.date ? localDate(s) : new Date(s))] = String(e.summary || "祝日");
+    }
+    HOL = map;
+    const gen = payload.generatedAt ? Date.parse(payload.generatedAt) : NaN;
+    META = { ok:true, demo:false, loading:false, error:null, stamp: isNaN(gen) ? Date.now() : gen, source:"feed" };
+    renderAll(); renderSettings();
+  }catch(e){
+    const code = (e && e.code) || "feed_error";
+    if (code === "bad_key"){ EV = []; META = { ok:false, demo:false, loading:false, error:{ code }, stamp:null, source:"feed" }; }
+    else META = Object.assign({}, META, { loading:false, error:{ code, message: e && e.message }, source:"feed" });
+    renderAll();
+  }
+}
+function readKeyFromHash(){
+  const m = /[#&]k=([^&]+)/.exec(location.hash || "");
+  if (!m) return;
+  try{ KEY = decodeURIComponent(m[1]); store.set("feedKey", KEY); history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+}
+
+/* ---------- サンプルの予定（連携も同期も無いときに試す用） ---------- */
+function demoPayload(now){
+  const d0 = startOfDay(now);
+  const at = (days, h, m) => { const d = addDays(d0, days); d.setHours(h, m, 0, 0); return d; };
+  const T = (days, sh, sm, eh, em, summary, extra) => Object.assign({ id:`demo-${days}-${sh}${sm}-${summary}`, summary, status:"confirmed",
+    start:{ dateTime: isoLocal(at(days, sh, sm)) }, end:{ dateTime: isoLocal(at(days, eh, em)) } }, extra || {});
+  const A = (days, len, summary, extra) => Object.assign({ id:`demo-a-${days}-${summary}`, summary, status:"confirmed",
+    start:{ date: dayKey(at(days, 0, 0)) }, end:{ date: dayKey(at(days + len, 0, 0)) } }, extra || {});
+  const me = { email:"me@example.com", self:true };
+  const events = [
+    T(1, 18, 30, 19, 30, "美容院", { location:"表参道" }),
+    T(2, 10, 0, 11, 0, "A社との商談", { location:"株式会社A社", attendees:[{ displayName:"佐藤" }, { displayName:"鈴木" }, me], description:"前回の議事録: 提案の方向性を確認済み。今回は最終版の資料を共有する。" }),
+    T(3, 19, 0, 20, 0, "ジム", { location:"恵比寿" }),
+    A(4, 1, "京都出張", { location:"京都市" }),
+    T(5, 19, 0, 21, 0, "友人とのディナー", { location:"青山" }),
+    T(5, 19, 0, 21, 0, "Reservation at ビストロ青山", { eventType:"FROM_GMAIL", location:"ビストロ青山 表参道店" }),
+    T(6, 13, 0, 15, 30, "映画", { location:"新宿" }),
+    T(8, 19, 0, 21, 0, "友人の結婚式", { location:"ホテル椿山荘" }),
+    T(9, 9, 0, 10, 30, "健康診断", { location:"クリニック" }),
+    T(11, 14, 0, 16, 0, "プロジェクト企画会議", { description:"参加URL: https://meet.google.com/abc-defg-hij", attendees:[{ displayName:"田中" }, me] }),
+    A(13, 2, "家族との旅行", { location:"箱根" }),
+    T(16, 10, 0, 11, 0, "採用面接", { location:"オンライン", description:"参加URL: https://meet.google.com/xyz" })
+  ];
+  for (let d = 0; d < S.weeks * 7; d++){ const wd = at(d, 0, 0).getDay(); if (wd >= 1 && wd <= 5) events.push(T(d, 8, 30, 18, 30, "会社", { recurringEventId:"demo-work" })); }
+  return { events };
+}
+function loadDemo(){
+  watchedDay = dayKey(new Date());
+  EV = prepare(normalize(demoPayload(new Date())));
+  META = { ok:true, demo:true, loading:false, error:null, stamp:null, source:"demo" };
+  renderAll(); toast("サンプルの予定を表示しています");
+}
+
+/* ---------- 起動 ---------- */
+$("btn-refresh").addEventListener("click", () => refresh(false));
+renderSettings();
+renderHome();
+setInterval(() => {
+  const k = dayKey(new Date());
+  if (watchedDay && k !== watchedDay){ watchedDay = k; if (mcp) startWatch(); else if (META.demo) loadDemo(); else if (FEED.available) loadFeed(false); }
+}, 60000);
+document.addEventListener("visibilitychange", () => {
+  flushMemo();
+  if (document.visibilityState !== "visible") return;
+  renderAll();
+  if (!mcp && FEED.available && META.stamp && Date.now() - META.stamp > 10 * MIN) loadFeed(false);
+});
+
+(async () => {
+  readKeyFromHash();
+  const use = (name) => (window.claude && typeof window.claude.use === "function") ? window.claude.use(name).catch(() => null) : Promise.resolve(null);
+  const [m, s] = await Promise.all([use("mcp"), use("sample")]);
+  mcp = m; sampleFn = s;
+  if (mcp){ renderSettings(); startWatch(); loadCalendars(); return; }
+  if (/^https?:$/.test(location.protocol) && !window.claude){ await loadFeed(false); if (FEED.available) return; }
+  META = { ok:false, demo:false, loading:false, error:{ code:"no_mcp" }, stamp:null, source:"" }; renderAll();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
+</script>
+</body>
+</html>
