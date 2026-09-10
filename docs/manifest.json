@@ -1,13 +1,13 @@
 {
-  "name": "準備コンパス",
-  "short_name": "準備コンパス",
+  "name": "Sakiyomi",
+  "short_name": "Sakiyomi",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#FAFAFB",
   "theme_color": "#6366F1",
-  "description": "Googleカレンダーの先の予定から、事前に準備すべきことを教えてくれるAI秘書",
+  "description": "予定の先を先に読んで、準備の提案を出すAI秘書",
   "icons": [
     {
       "src": "icons/icon-192.png",

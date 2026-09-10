@@ -1,4 +1,4 @@
-const CACHE = "prep-compass-v1";
+const CACHE = "sakiyomi-v2";
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => { e.waitUntil(self.clients.claim()); });
 self.addEventListener("fetch", (e) => {

@@ -2,15 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>準備コンパス</title>
+<title>Sakiyomi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <meta name="theme-color" content="#FAFAFB" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1117" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="準備コンパス">
-<meta name="description" content="Googleカレンダーの先の予定から、事前に準備すべきことを教えてくれるAI秘書">
+<meta name="apple-mobile-web-app-title" content="Sakiyomi">
+<meta name="description" content="予定の先を先に読んで、準備の提案を出すAI秘書">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -78,6 +78,7 @@ button{cursor:pointer}
 .hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px}
 .brand{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--ink); font-size:1.05rem}
 .brand svg{width:26px; height:26px; color:var(--accent)}
+.brand small{font-size:.7rem; font-weight:500; color:var(--ink-3); margin-left:2px; letter-spacing:.06em}
 .hdr-actions{display:flex; gap:8px}
 .icon-btn{width:40px; height:40px; border-radius:50%; border:0; background:var(--surface); display:grid; place-items:center; color:var(--primary); box-shadow:var(--shadow)}
 .icon-btn svg{width:20px; height:20px}
@@ -329,6 +330,7 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="av-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#C4B5FD"/></linearGradient>
+    <symbol id="i-mark" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2.5c.3-.9 1.7-.9 2 0l1.6 5.1a2 2 0 0 0 1.3 1.3l5.1 1.6c.9.3.9 1.7 0 2l-5.1 1.6a2 2 0 0 0-1.3 1.3L13 20.5c-.3.9-1.7.9-2 0l-1.6-5.1a2 2 0 0 0-1.3-1.3L3 12.5c-.9-.3-.9-1.7 0-2l5.1-1.6a2 2 0 0 0 1.3-1.3z"/><path d="M19.5 15.5c.2-.5 1-.5 1.2 0l.5 1.4 1.4.5c.5.2.5 1 0 1.2l-1.4.5-.5 1.4c-.2.5-1 .5-1.2 0l-.5-1.4-1.4-.5c-.5-.2-.5-1 0-1.2l1.4-.5z" opacity=".8"/></symbol>
     <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></symbol>
     <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></symbol>
@@ -366,7 +368,7 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 
 <div class="app" id="app">
   <header class="hdr">
-    <div class="brand"><svg><use href="#i-compass"/></svg><span>準備コンパス</span></div>
+    <div class="brand"><svg><use href="#i-mark"/></svg><span>Sakiyomi</span><small>先読み</small></div>
     <div class="hdr-actions">
       <button class="icon-btn" id="btn-refresh" type="button" aria-label="最新の予定を読み込む" title="最新の予定を読み込む"><svg><use href="#i-refresh"/></svg></button>
       <button class="icon-btn" type="button" data-act="settings" aria-label="設定を開く"><svg><use href="#i-gear"/></svg></button>
@@ -433,7 +435,7 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 <script>
 "use strict";
 /* ============================================================
-   準備コンパス — Googleカレンダーの先の予定から「準備すべきこと」を出す AI秘書
+   Sakiyomi（先読み） — Googleカレンダーの先の予定から「準備すべきこと」を提案する AI秘書
    データの取り方は3通り: claude.ai の連携（mcp）／ 暗号化された同期データ（GitHub Pages）／ サンプル
    ============================================================ */
 const SERVER = "Google Calendar";
@@ -719,7 +721,7 @@ function explain(err){
   if (c === "no_mcp") return ["warn", "このページからはカレンダーを読めません", "claude.ai にログインした状態で、このページの claude.ai のURL（claude.ai/code/artifact/…）を開くと、Google カレンダーの予定を読み込みます。", true];
   if (c === "need_key") return ["warn", "合言葉を入れると予定を表示します", "このページの予定データは暗号化されています。Macの同期設定で決めた合言葉を入れてください（この端末に保存されます）。"];
   if (c === "bad_key") return ["err", "合言葉が違うようです", "もう一度入力してください。合言葉は Mac の prep-compass/sync/.secret に書いてあります。"];
-  if (c === "no_feed") return ["warn", "予定データがまだありません", "Mac の同期（準備コンパスの定期タスク）が一度動くと、ここに予定が出ます。", false];
+  if (c === "no_feed") return ["warn", "予定データがまだありません", "Mac の同期（Sakiyomi の定期タスク）が一度動くと、ここに予定が出ます。", false];
   if (c === "feed_error") return ["err", "予定データを読み込めませんでした", "通信状況を確認して、右上の更新ボタンを押してください。" + (err.message ? `（詳細: ${String(err.message).slice(0, 100)}）` : "")];
   if (c === "needs_reauth") return ["err", "Google カレンダーの接続が切れています", "claude.ai の「設定 → コネクター」で Google カレンダーをつなぎ直してください。"];
   if (c === "server_not_connected") return ["err", "Google カレンダーがつながっていません", "claude.ai の「設定 → コネクター」で Google カレンダーを追加すると、ここに予定が出ます。"];
@@ -835,7 +837,7 @@ function renderAssistant(events, now){
     const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
     chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…（例：来週の持ち物は？）" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
   } else chat = `<p class="empty" style="padding:10px 2px 0">予定についてAIに相談するには、<a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">claude.ai 版</a>を開いてください。</p>`;
-  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>1ヶ月先までの見通しをまとめました。</p></div>
+  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>Sakiyomi</b>1ヶ月先までの見通しをまとめました。</p></div>
     ${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : `<div class="card" style="margin-top:12px"><p class="empty">読み込み中…</p></div>`}${chat}`;
 }
 async function askAssistant(q){
@@ -846,7 +848,7 @@ async function askAssistant(q){
     return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}]${todo.length ? `：提案 ${todo.join("、")}` : ""}`;
   }).join("\n");
   CHAT = { busy:true, q, a:"", err:null }; renderHome();
-  const prompt = `あなたは「準備コンパス」というアプリのAI秘書です。ユーザーの今後の予定と準備状況をもとに、質問に日本語で答えてください。
+  const prompt = `あなたは「Sakiyomi（先読み）」というアプリのAI秘書です。ユーザーの今後の予定と準備状況をもとに、質問に日本語で答えてください。
 
 今日: ${jpDate(now)}
 今後1ヶ月の予定（日付順。[ ]は準備の重さ、その後ろはアプリが出している準備の提案）:
