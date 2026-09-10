@@ -176,6 +176,18 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .seg button{flex:1; border:0; background:none; border-radius:999px; min-height:38px; font-weight:600; color:var(--ink-2); font-size:.85rem}
 .seg button[aria-pressed="true"]{background:var(--primary); color:var(--primary-ink)}
 
+/* ---------- 提案の一覧 ---------- */
+.sug{list-style:none; margin:0; padding:0 14px 10px}
+.sug li{display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-top:1px solid var(--line)}
+.sug li:first-child{border-top:0}
+.sug .ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none}
+.sug .ic svg{width:16px; height:16px}
+.sug b{display:block; font-size:.9rem; font-weight:600; color:var(--ink); line-height:1.4}
+.sug small{display:block; font-size:.76rem; color:var(--ink-3); margin-top:1px}
+.sug .mo{padding:0; border-top:0}
+.tile .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; background:var(--hair)}
+.tile .dot.prep{background:var(--rose-soft)} .tile .dot.check{background:var(--amber-soft)}
+
 /* ---------- 週の見出し・ヒント ---------- */
 .wk-h{display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; font-size:.82rem; font-weight:700; color:var(--ink-2)}
 .wk-h span{font-weight:500; color:var(--ink-3); font-size:.75rem}
@@ -430,6 +442,7 @@ const MIN = 60000, DAY = 86400000;
 const WD = "日月火水木金土";
 const FEED_URL = "data/events.enc";
 const PBKDF2_ITER = 100000;
+const DAYS = 31;                                   // 表示・取得する期間（1ヶ月）
 const CLAUDE_URL = "https://claude.ai/code/artifact/7d1258a3-4227-4de0-8556-4f3a71ca1297";
 
 /* ---------- 端末内の保存（使えない環境でも落ちない） ---------- */
@@ -655,12 +668,9 @@ function normalize(payload){
 }
 function prepare(events){ for (const ev of events){ ev.cls = classify(ev); ev.routine = ev.cls.key === "routine"; ev.move = ev.cls.key === "move"; } return events; }
 
-/* ---------- チェック状態 ---------- */
-function itemsOf(ev){ return ev.cls.items.concat(store.get(`custom:${ev.id}`, []).filter(c => c && c.id && c.title)); }
-function checks(ev){ return store.get(`chk:${ev.id}`, {}) || {}; }
-function progress(ev){ const it = itemsOf(ev), c = checks(ev); return { done: it.filter(i => c[i.id]).length, total: it.length }; }
-function effLevel(ev){ const p = progress(ev); return (p.total > 0 && p.done === p.total) ? "done" : ev.cls.level; }
-
+/* ---------- 提案（チェック状態は持たない） ---------- */
+function itemsOf(ev){ return ev.cls.items; }
+function effLevel(ev){ return ev.cls.level; }
 
 /* ---------- 状態 ---------- */
 let EV = [];                                  // 正規化・分類済みの予定
@@ -670,49 +680,27 @@ let CALS = null;                              // カレンダー一覧
 let mcp = null, sampleFn = null, unwatch = null, unwatchHol = null, watchedDay = null, retried = false;
 let FEED = { available:false };
 let KEY = store.get("feedKey", "") || "";
-let DETAIL = null, DTAB = "prep";
+let DETAIL = null;
 let AI = { busy:false, list:null, err:null, forId:null };
-let WEEKF = 0;                                // 予定の絞り込み: "all" か 週番号
-const EXPANDED = new Set();
 let CHAT = { busy:false, q:"", a:"", err:null };
 
 const byId = (id) => EV.find(e => e.id === id) || null;
 function visible(now){
-  const max = S.weeks * 7;
+  const max = DAYS;
   return EV.filter(ev => { const d = daysUntil(ev.start, now); const de = daysUntil(ev.end, now); return de >= 0 && d < max; });
 }
 function bucketDay(ev, now){ return Math.max(0, daysUntil(ev.start, now)); }
 function bucketWeek(ev, now){ return Math.floor(bucketDay(ev, now) / 7); }
 
-/* ---------- スコアとインサイト ---------- */
-function scoreFor(events, now){
-  let done = 0, total = 0, urgent = null, hasPrep = false;
-  for (const ev of events){
-    const d = bucketDay(ev, now);
-    if (ev.routine || ev.move || d > 6) continue;
-    const p = progress(ev), w = ev.cls.level === "prep" ? 1 : 0.4;
-    done += p.done * w; total += p.total * w;
-    if (ev.cls.level === "prep" && p.total) hasPrep = true;
-    if (ev.cls.level === "prep" && d <= 2 && p.done < p.total && !urgent) urgent = ev;
-  }
-  if (!total) return { pct:null, tone:"none", urgent:null, hasPrep:false };
-  const pct = Math.round(done / total * 100);
-  const tone = urgent ? "low" : pct >= 80 ? "good" : "warn";
-  return { pct, tone, urgent, hasPrep };
+/* ---------- 1ヶ月のまとめ ---------- */
+function monthSummary(events, now){
+  const main = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy").sort((a, b) => a.start - b.start);
+  const prep = main.filter(ev => ev.cls.level === "prep"), check = main.filter(ev => ev.cls.level === "check");
+  const urgent = prep.find(ev => bucketDay(ev, now) <= 2) || null;
+  const weekPrep = prep.filter(ev => bucketDay(ev, now) <= 6);
+  return { main, prep, check, urgent, weekPrep };
 }
-function insightsFor(events, now){
-  const list = [];
-  for (const ev of events){
-    if (ev.routine || ev.move) continue;
-    const d = bucketDay(ev, now), p = progress(ev);
-    if (p.total === 0 || p.done === p.total) continue;
-    if (!ev.cls.insight && ev.cls.level !== "prep") continue;
-    const text = ev.cls.insight || `チェックリストが残り${p.total - p.done}件。${relDay(d)}までに確認しておきましょう。`;
-    list.push({ id:ev.id, ev, days:d, date:ev.start, title:`${relDay(d)}の${ev.title}`, text, soon: d <= 2 && ev.cls.level === "prep", remain: p.total - p.done });
-  }
-  list.sort((a, b) => a.days - b.days || (b.soon - a.soon));
-  return list;
-}
+function weekName(w){ return ["今週", "来週", "再来週", "その先"][Math.min(w, 3)]; }
 
 /* ---------- 描画：共通部品 ---------- */
 function badge(ev){ const l = effLevel(ev); return `<span class="badge ${l}">${LEVEL[l].label}</span>`; }
@@ -721,11 +709,7 @@ function timeText(ev){
   return `${hhmm(ev.start)}–${hhmm(ev.end)}`;
 }
 function locHtml(ev){ return ev.location ? `<span class="loc"><svg><use href="#i-pin"/></svg>${esc(ev.location)}</span>` : ""; }
-function kindChip(ev){
-  const c = checks(ev), kinds = [];
-  for (const it of itemsOf(ev)){ if (c[it.id]) continue; const k = (KIND[it.kind] || KIND.check).name; if (!kinds.includes(k)) kinds.push(k); if (kinds.length >= 2) break; }
-  return kinds.length ? `<span class="chip">${esc(kinds.join("・"))}</span>` : "";
-}
+function kindChip(ev){ return `<span class="chip">${esc(ev.cls.label)}</span>`; }
 function ringHtml(pct, size, sw){
   const r = (size - sw) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
   return `<svg viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle class="track" cx="${size/2}" cy="${size/2}" r="${r}"/><circle class="bar" cx="${size/2}" cy="${size/2}" r="${r}" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>`;
@@ -756,16 +740,14 @@ function greeting(now){
   const icon = (h >= 5 && h < 17) ? "i-sun" : "i-moon";
   return `${esc(g)}${S.name ? `<span class="nm">${esc(S.name)}さん</span>` : ""}<svg class="wx" aria-hidden="true"><use href="#${icon}"/></svg>`;
 }
-function bubbleText(events, now, sc){
-  const week = events.filter(ev => !ev.routine && !ev.move && bucketDay(ev, now) <= 6);
-  const prep = week.filter(ev => ev.cls.level === "prep");
+function bubbleText(sm, now){
   if (META.loading) return "予定を読み込んでいます。少しお待ちください。";
   if (!META.ok && !META.demo) return "まだ予定を読み込めていません。下の案内を確認してください。";
-  if (!week.length) return "今週は予定が入っていません。ゆっくり過ごせそうです。";
-  if (sc.urgent) return `${relDay(bucketDay(sc.urgent, now))}の「${sc.urgent.title}」の準備が残っています。まずはここから進めましょう。`;
-  if (prep.length && sc.pct === 100) return "今週の準備はすべて整っています。この調子でいきましょう。";
-  if (prep.length) return `今週は準備が必要な予定が${prep.length}件あります。事前準備を進めて、余裕のある一週間にしましょう。`;
-  return `今週の予定は${week.length}件。予約や時間の確認だけ済ませておけば大丈夫です。`;
+  if (!sm.main.length) return "この1ヶ月、特別な準備がいる予定はありません。ゆっくり過ごせそうです。";
+  if (sm.urgent) return `${relDay(bucketDay(sm.urgent, now))}の「${sm.urgent.title}」に向けて、そろそろ準備を始めましょう。`;
+  if (sm.weekPrep.length) return `今週は要準備の予定が${sm.weekPrep.length}件あります。早めに手をつけると、余裕のある一週間になります。`;
+  if (sm.prep.length) return `この1ヶ月で要準備の予定は${sm.prep.length}件。いちばん近いのは${relDay(bucketDay(sm.prep[0], now))}の「${sm.prep[0].title}」です。`;
+  return `この1ヶ月は確認だけで済む予定が${sm.check.length}件。予約や時間の確認をしておきましょう。`;
 }
 function renderStatus(){
   const st = $("h-status");
@@ -788,68 +770,60 @@ function renderStatus(){
       ${offerDemo ? `<div class="actions"><button class="btn small" type="button" data-act="demo">サンプルの予定で試す</button></div>` : ""}</div>`;
   } else $("h-notice").innerHTML = "";
 }
-function renderGreeting(events, now){
+function renderGreeting(sm, now){
   $("h-date").textContent = jpDate(now);
   $("h-greet").innerHTML = greeting(now);
-  const sc = scoreFor(events, now);
-  const ring = sc.pct == null ? "" : `<span class="mini-score num" data-tone="${sc.tone}" aria-label="今週の準備スコア ${sc.pct}">${ringHtml(sc.pct, 48, 5)}<b>${sc.pct}%</b></span>`;
-  $("h-bubble").innerHTML = `<p>${esc(bubbleText(events, now, sc))}</p>${ring}`;
+  $("h-bubble").innerHTML = `<p>${esc(bubbleText(sm, now))}</p>`;
 }
-function renderTiles(events, now){
-  const main = events.filter(ev => !ev.routine && !ev.move);
-  const tiles = [["all", "すべて", main.length]].concat(Array.from({length:S.weeks}, (_, w) => [String(w), w === 0 ? "今週" : `${w}週間先`, main.filter(ev => bucketWeek(ev, now) === w).length]));
-  $("h-tiles").innerHTML = tiles.map(([k, l, n]) => `<button class="tile${String(WEEKF) === k ? " is-on" : ""}" type="button" data-act="filter" data-f="${k}" aria-pressed="${String(WEEKF) === k}"><span class="lbl">${l}</span><b class="num">${n}<small>件</small></b></button>`).join("");
-  $("h-tiles").style.gridTemplateColumns = `repeat(${tiles.length}, 1fr)`;
+function renderStats(sm){
+  $("h-tiles").style.gridTemplateColumns = "repeat(2, 1fr)";
+  $("h-tiles").innerHTML = `<div class="tile"><span class="lbl"><i class="dot prep"></i>要準備</span><b class="num">${sm.prep.length}<small>件</small></b></div>
+    <div class="tile"><span class="lbl"><i class="dot check"></i>確認のみ</span><b class="num">${sm.check.length}<small>件</small></b></div>`;
 }
 
-/* ---------- 描画：予定と準備（1つの一覧。準備がある予定はカードの中にチェックリスト） ---------- */
-function taskCard(ev, now){
-  const d = bucketDay(ev, now), items = itemsOf(ev), c = checks(ev), open = EXPANDED.has(ev.id), p = progress(ev), dd = ev.start;
-  const shown = open ? items : items.slice(0, 3);
-  const rows = shown.map((it, i) => `<label class="cli${c[it.id] ? " is-done" : ""}" for="t-${esc(ev.id)}-${i}"><input type="checkbox" id="t-${esc(ev.id)}-${i}" data-act="check" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}"${c[it.id] ? " checked" : ""}><span>${esc(it.title)}</span></label>`).join("");
-  const more = items.length > 3 ? `<button class="more" type="button" data-act="expand" data-id="${esc(ev.id)}" aria-expanded="${open}">${open ? "閉じる" : `他${items.length - 3}件を見る`}<svg><use href="#${open ? "i-up" : "i-down"}"/></svg></button>` : "";
-  const hint = (ev.cls.insight && p.done < p.total) ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : "";
-  const due = p.total && p.done === p.total ? "準備完了" : relDay(d);
-  const hol = HOL[dayKey(dd)];
+/* ---------- 描画：予定と準備の提案（要準備・確認のみの予定だけ。1ヶ月ぶん） ---------- */
+function sugList(items, max, ev){
+  const shown = max ? items.slice(0, max) : items;
+  return `<ul class="sug">${shown.map(it => { const k = KIND[it.kind] || KIND.check; return `<li><span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span><span><b>${esc(it.title)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ""}</span></li>`; }).join("")}
+    ${max && items.length > max ? `<li class="mo"><button class="more" type="button" data-act="open" data-id="${esc(ev.id)}">他${items.length - max}件の提案を見る<svg><use href="#i-right"/></svg></button></li>` : ""}</ul>`;
+}
+function sugCard(ev, now){
+  const d = bucketDay(ev, now), dd = ev.start, hol = HOL[dayKey(dd)], items = itemsOf(ev);
   return `<article class="task">
     <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
       <span class="dcol ${dayClass(dd, hol)}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]}${hol ? "・祝" : ""} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
       <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${badge(ev)}${kindChip(ev)}</span></span>
-      <span class="due${d <= 2 && p.total && p.done < p.total && ev.cls.level === "prep" ? " soon" : ""} num">${due}</span></button>
-    ${hint}${rows ? `<div class="cl">${rows}${more}</div>` : ""}</article>`;
+      <span class="due${d <= 2 && ev.cls.level === "prep" ? " soon" : ""} num">${relDay(d)}</span></button>
+    ${ev.cls.insight ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
+    ${items.length ? sugList(items, 4, ev) : ""}</article>`;
 }
-function renderTasks(events, now){
-  const weeks = WEEKF === "all" ? Array.from({length:S.weeks}, (_, w) => w) : [Number(WEEKF)];
-  let html = "", shown = 0;
-  for (const w of weeks){
-    const inWeek = events.filter(ev => bucketWeek(ev, now) === w && !ev.move);
-    const main = inWeek.filter(ev => !ev.routine), routine = inWeek.filter(ev => ev.routine);
-    const from = addDays(startOfDay(now), w*7), to = addDays(from, 6);
-    if (WEEKF === "all") html += `<div class="wk-h">${weekLabel(w)}<span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>`;
-    html += main.map(ev => taskCard(ev, now)).join("");
-    shown += main.length;
-    if (routine.length) html += `<div class="routine-box"><details class="routine"><summary><span class="n">${esc(routine[0].title)}${routine.length > 1 ? " など" : ""}、定型の予定 ${routine.length}件</span><span class="badge easy">準備不要</span><svg><use href="#i-right"/></svg></summary>${routine.map(ev => `<div class="rrow"><b class="num">${md(ev.start)}（${WD[ev.start.getDay()]}）</b><span>${esc(ev.title)} ${ev.allDay ? "終日" : `${hhmm(ev.start)}–${hhmm(ev.end)}`}</span></div>`).join("")}</details></div>`;
-    if (!main.length && !routine.length) html += `<div class="card" style="margin-bottom:12px"><p class="empty">${META.loading ? "読み込み中…" : `${weekLabel(w)}の予定はありません。`}</p></div>`;
-  }
-  $("tasks-note").textContent = shown ? `${shown}件・カードの中でそのままチェックできます` : "";
-  $("h-tasks").innerHTML = html;
+function renderTasks(sm, now){
+  const groups = [[], [], [], []];
+  for (const ev of sm.main) groups[Math.min(bucketWeek(ev, now), 3)].push(ev);
+  const today = startOfDay(now);
+  let html = "";
+  groups.forEach((g, w) => {
+    if (!g.length) return;
+    const from = addDays(today, w * 7), to = w < 3 ? addDays(from, 6) : addDays(today, DAYS - 1);
+    html += `<div class="wk-h">${weekName(w)}<span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>` + g.map(ev => sugCard(ev, now)).join("");
+  });
+  $("tasks-note").textContent = sm.main.length ? `1ヶ月で${sm.main.length}件。準備不要の予定は表示していません` : "";
+  $("h-tasks").innerHTML = html || `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "この1ヶ月、準備がいる予定はありません。"}</p></div>`;
 }
 
 /* ---------- 描画：AIアシスタント（予定単位ではなく、全体の見通しと相談） ---------- */
 function briefing(events, now){
-  const out = [], main = events.filter(ev => !ev.routine && !ev.move), today = startOfDay(now);
+  const out = [], main = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy"), today = startOfDay(now);
   const soon = main.filter(ev => bucketDay(ev, now) <= 2);
   if (soon.length) out.push({ tone:"blue", icon:"i-clock", text:`3日以内の予定は${soon.length}件：${soon.slice(0, 4).map(ev => `${ev.title}（${relDay(bucketDay(ev, now))}）`).join("、")}${soon.length > 4 ? " ほか" : ""}。` });
   else out.push({ tone:"green", icon:"i-check", text:"3日以内に予定はありません。少し先の準備に手をつけるチャンスです。" });
   const perDay = {}; for (const ev of main){ const k = dayKey(addDays(today, bucketDay(ev, now))); perDay[k] = (perDay[k] || 0) + 1; }
   const busy = Object.keys(perDay).filter(k => perDay[k] >= 3).sort().map(k => localDate(k));
   if (busy.length) out.push({ tone:"amber", icon:"i-alert", text:`${busy.slice(0, 2).map(d => `${md(d)}（${WD[d.getDay()]}）`).join("・")}は予定が3件以上。移動と休憩に余裕を持たせましょう。` });
-  const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < S.weeks * 7; });
+  const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < DAYS; });
   if (hols.length) out.push({ tone:"rose", icon:"i-cal", text:`${hols.slice(0, 3).map(k => `${md(localDate(k))} ${HOL[k]}`).join("、")}。休みの前後は、予約や締切のずれに注意。` });
-  const remain = main.reduce((n, ev) => { const p = progress(ev); return n + (p.total - p.done); }, 0);
-  const prepLeft = main.filter(ev => ev.cls.level === "prep" && progress(ev).done < progress(ev).total).length;
-  if (remain) out.push({ tone:"violet", icon:"i-list", text:`チェックリストの残りは合計${remain}件（要準備の予定 ${prepLeft}件）。近い予定から順に進めましょう。` });
-  else if (main.length) out.push({ tone:"green", icon:"i-check", text:"チェックリストはすべて完了しています。" });
+  const far = main.filter(ev => ev.cls.level === "prep" && bucketDay(ev, now) >= 14);
+  if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先の要準備は${far.length}件：${far.slice(0, 3).map(ev => `${ev.title}（${md(ev.start)}）`).join("、")}。交通や宿の予約は今のうちに。` });
   return out;
 }
 function renderAssistant(events, now){
@@ -861,21 +835,21 @@ function renderAssistant(events, now){
     const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
     chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…（例：来週の持ち物は？）" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
   } else chat = `<p class="empty" style="padding:10px 2px 0">予定についてAIに相談するには、<a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">claude.ai 版</a>を開いてください。</p>`;
-  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>${S.weeks}週間先までの見通しをまとめました。</p></div>
+  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>準備コンパス</b>1ヶ月先までの見通しをまとめました。</p></div>
     ${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : `<div class="card" style="margin-top:12px"><p class="empty">読み込み中…</p></div>`}${chat}`;
 }
 async function askAssistant(q){
   if (!sampleFn || CHAT.busy || !q) return;
   const now = new Date();
-  const ctx = visible(now).filter(ev => !ev.move).slice(0, 30).map(ev => {
-    const p = progress(ev), c = checks(ev), todo = itemsOf(ev).filter(it => !c[it.id]).map(it => it.title).slice(0, 5);
-    return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}${p.total ? ` 残り${p.total - p.done}/${p.total}` : ""}]${todo.length ? `：${todo.join("、")}` : ""}`;
+  const ctx = visible(now).filter(ev => !ev.move && !ev.routine).slice(0, 40).map(ev => {
+    const todo = itemsOf(ev).map(it => it.title).slice(0, 5);
+    return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}]${todo.length ? `：提案 ${todo.join("、")}` : ""}`;
   }).join("\n");
   CHAT = { busy:true, q, a:"", err:null }; renderHome();
   const prompt = `あなたは「準備コンパス」というアプリのAI秘書です。ユーザーの今後の予定と準備状況をもとに、質問に日本語で答えてください。
 
 今日: ${jpDate(now)}
-今後の予定（先頭から日付順。[ ]は準備の重さと残り項目）:
+今後1ヶ月の予定（日付順。[ ]は準備の重さ、その後ろはアプリが出している準備の提案）:
 ${ctx || "（予定はありません）"}
 
 ユーザーの質問: ${q.slice(0, 500)}
@@ -896,10 +870,10 @@ ${ctx || "（予定はありません）"}
 function renderHome(){
   const now = new Date();
   renderStatus();
-  const events = visible(now);
-  renderGreeting(events, now);
-  renderTiles(events, now);
-  renderTasks(events, now);
+  const events = visible(now), sm = monthSummary(events, now);
+  renderGreeting(sm, now);
+  renderStats(sm);
+  renderTasks(sm, now);
   renderAssistant(events, now);
 }
 
@@ -913,29 +887,26 @@ function renderSettings(){
   box.innerHTML = `
     <div class="field"><label for="st-name">呼び名（任意）</label><p class="help">あいさつに使います。空欄でも大丈夫です。</p>
       <input type="text" id="st-name" value="${esc(S.name)}" data-act="name" autocomplete="off" placeholder="例：山田"></div>
-    <div class="field"><span class="lbl">表示する期間</span><p class="help">今週から何週間先までを表示するかです。</p>
-      <div class="seg" role="group" aria-label="表示する期間">${[2,3,4].map(w => `<button type="button" data-act="weeks" data-w="${w}" aria-pressed="${S.weeks === w}">${w}週間</button>`).join("")}</div></div>
     ${mcp ? `<div class="field"><label for="st-cal">読み込むカレンダー</label><p class="help">通常はメインのカレンダーのままで大丈夫です。</p>
       <select id="st-cal" data-act="cal"><option value=""${S.calendarId ? "" : " selected"}>メインのカレンダー</option>${calOpts}</select>
       ${CALS == null ? `<p class="help" style="margin-top:6px">カレンダーの一覧を読み込んでいます…</p>` : ""}</div>` : ""}
     ${feedMode ? `<div class="field"><label for="st-key">合言葉</label><p class="help">同期された予定データを開くための合言葉です。この端末にだけ保存されます。</p>
       <input type="password" id="st-key" value="${esc(KEY)}" data-act="key" autocomplete="off"></div>` : ""}
     <div class="field"><label class="switch" for="st-hol"><span>祝日を表示する<br><span class="help" style="display:block;margin:0">日本の祝日カレンダーを読み込みます</span></span><input type="checkbox" id="st-hol" data-act="hol"${S.holidays ? " checked" : ""}></label></div>
-    <div class="field"><label for="st-routine">定型の予定としてまとめる</label><p class="help">Google カレンダーで「繰り返し」に設定した予定のうち、この言葉で始まるものを「準備不要」としてまとめます（毎回別々に入れる美容院やジムには効きません）。読点（、）かカンマで区切ってください。</p>
+    <div class="field"><label for="st-routine">表示しない定型の予定</label><p class="help">Google カレンダーで「繰り返し」に設定した予定のうち、この言葉で始まるものは「準備不要」として表示しません。読点（、）かカンマで区切ってください。</p>
       <input type="text" id="st-routine" value="${esc(S.routine.join("、"))}" data-act="routine" autocomplete="off"></div>
-    <div class="toolbar"><button class="btn" type="button" data-act="refresh"><svg><use href="#i-refresh"/></svg>最新の予定を読み込む</button>
-      <button class="btn danger" type="button" data-act="wipe">チェックとメモを消去</button></div>
+    <div class="toolbar"><button class="btn" type="button" data-act="refresh"><svg><use href="#i-refresh"/></svg>最新の予定を読み込む</button></div>
     <div class="info"><h3>ホーム画面に追加する</h3><ol><li>iPhone の Safari でこのページを開く</li><li>下の共有ボタン（□に↑）をタップ</li><li>「ホーム画面に追加」を選ぶ</li></ol><p class="meta">アプリのように起動できます。</p></div>
     <div class="info"><h3>このアプリについて</h3>
-      <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。チェック・メモ・設定はこの端末の中だけに保存され、外部には送られません。</p>
+      <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。設定はこの端末の中だけに保存され、外部には送られません。</p>
       <p style="margin-top:8px">${mcp ? "「AIに追加の提案をもらう」や AI への相談を使ったときだけ、その予定の内容が claude.ai の Claude に送られます。" : `AIへの相談は <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> で使えます。`}</p>
-      <p class="meta">準備の判定は、予定のタイトルと場所のキーワードから決めています。判定が合わないときは、詳細画面で項目を自由に足せます。</p></div>`;
+      <p class="meta">準備の判定と提案は、予定のタイトルと場所のキーワードから決めています。1ヶ月先までの予定を表示し、準備不要のものは出しません。</p></div>`;
 }
 
 /* ---------- 描画：詳細シート ---------- */
 function openDetail(id){
   const ev = byId(id); if (!ev) return;
-  DETAIL = id; DTAB = "prep";
+  DETAIL = id;
   if (AI.forId !== id) AI = { busy:false, list:null, err:null, forId:id };
   renderDetail();
   const sh = $("sheet"); sh.classList.add("is-open"); sh.setAttribute("aria-hidden", "false");
@@ -955,7 +926,6 @@ function closeSettings(){
   renderHome(); const b = document.querySelector(".tab.is-on"); if (b) b.focus();
 }
 function closeDetail(){
-  flushMemo();
   const sh = $("sheet"); sh.classList.remove("is-open"); sh.setAttribute("aria-hidden", "true");
   $("main").inert = false; document.querySelector(".tabbar").inert = false; document.querySelector(".hdr").inert = false;
   const id = DETAIL; DETAIL = null;
@@ -969,9 +939,7 @@ function linkify(text){
 }
 function renderDetail(){
   const ev = byId(DETAIL); if (!ev) return;
-  const ae = document.activeElement;
-  if (DTAB === "memo" && ae && ae.dataset && ae.dataset.act === "memo"){ flushMemo(); return; }
-  const now = new Date(), d = bucketDay(ev, now), lvl = effLevel(ev);
+  const now = new Date(), d = bucketDay(ev, now), lvl = ev.cls.level, items = itemsOf(ev);
   $("sh-when").textContent = `${jpDate(ev.start)}・${relDay(d)}`;
   const when = ev.allDay ? `${timeText(ev)}${daysUntil(ev.end, ev.start) > 0 ? `（${md(ev.start)}〜${md(ev.end)}）` : ""}` : `${hhmm(ev.start)}–${hhmm(ev.end)}（${durText(ev.end - ev.start)}）`;
   const meta = [
@@ -979,54 +947,33 @@ function renderDetail(){
     ev.location ? `<div><svg><use href="#i-pin"/></svg><a href="https://maps.apple.com/?q=${encodeURIComponent(ev.location)}" target="_blank" rel="noopener noreferrer">${esc(ev.location)}</a></div>` : "",
     ev.attendees.length ? `<div><svg><use href="#i-users"/></svg><span>${esc(ev.attendees.slice(0, 4).join("、"))}${ev.attendees.length > 4 ? ` ほか${ev.attendees.length - 4}人` : ""}</span></div>` : ""
   ].join("");
-  const tabs = [["overview","概要"],["prep","事前準備"],["memo","メモ"]].map(([k, n]) => `<button type="button" role="tab" aria-selected="${DTAB === k}" data-act="dtab" data-t="${k}">${n}</button>`).join("");
-  let body = "";
-  if (DTAB === "prep") body = prepHtml(ev);
-  else if (DTAB === "memo"){
-    const memo = store.get(`memo:${ev.id}`, "");
-    body = `<label class="sr" for="memo">メモ</label><textarea class="memo" id="memo" placeholder="持ち物の詳細や、当日に思い出したいことを書いておけます。" data-act="memo">${esc(memo)}</textarea><p class="help" style="font-size:.78rem;color:var(--ink-3);margin:8px 0 0">入力すると自動で保存されます（この端末のみ）。</p>`;
-  } else {
-    const kv = [
-      ["日時", `<span class="num">${esc(jpDate(ev.start))} ${esc(when)}</span>`],
-      ev.location ? ["場所", esc(ev.location)] : null,
-      ev.attendees.length ? ["参加者", esc(ev.attendees.join("、"))] : null,
-      ev.reservation ? ["予約情報", esc(ev.reservation)] : null,
-      ["分類", `${esc(ev.cls.label)}・${LEVEL[ev.cls.level].label}`]
-    ].filter(Boolean).map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("");
-    body = `<div class="card"><ul class="kv">${kv}</ul></div>
-      ${ev.description ? `<div class="info"><h3>説明</h3><p class="desc">${linkify(ev.description.slice(0, 2000))}${ev.description.length > 2000 ? "…" : ""}</p></div>` : ""}
-      ${safeHttp(ev.link) ? `<div class="toolbar"><a class="btn" href="${esc(safeHttp(ev.link))}" target="_blank" rel="noopener noreferrer"><svg><use href="#i-ext"/></svg>Googleカレンダーで開く</a></div>` : ""}`;
-  }
-  $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div>
-      <div class="lvl"><span class="badge ${lvl}">${LEVEL[lvl].label}</span><p>${LEVEL[lvl].hint}</p></div></section>
-    <div class="tabs" role="tablist">${tabs}</div>${body}`;
-}
-function prepHtml(ev){
-  const items = itemsOf(ev), c = checks(ev), p = progress(ev);
-  const rows = items.map((it, i) => {
-    const k = KIND[it.kind] || KIND.check, on = !!c[it.id], custom = String(it.id).startsWith("c-"), cid = `ck-${i}`;
-    return `<label class="ck${on ? " is-done" : ""}" for="${cid}"><input type="checkbox" id="${cid}" data-act="check" data-item="${esc(it.id)}"${on ? " checked" : ""} aria-label="${esc(it.title)}">
-      <span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span>
-      <span class="tt"><span class="sr">${esc(k.name)}：</span><b>${esc(it.title)}</b>${it.note ? `<span>${esc(it.note)}</span>` : ""}</span>
-      ${custom ? `<button class="rm" type="button" data-act="rm-item" data-item="${esc(it.id)}" aria-label="この項目を削除"><svg><use href="#i-x"/></svg></button>` : ""}</label>`;
-  }).join("");
-  const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
   let ai = "";
   if (sampleFn){
     let inner = "";
     if (AI.forId === ev.id && AI.busy) inner = `<p class="note">考え中…（数秒かかります）</p>`;
     else if (AI.forId === ev.id && AI.err) inner = `<p class="note">${esc(AI.err)}</p><button class="btn small" type="button" data-act="ai">もう一度</button>`;
     else if (AI.forId === ev.id && AI.list){
-      inner = AI.list.length ? `<ul>${AI.list.map((s, i) => `<li><span class="tt">${esc(s.title)}${s.note ? `<span>${esc(s.note)}</span>` : ""}</span><button class="btn small" type="button" data-act="ai-add" data-i="${i}"><svg><use href="#i-plus"/></svg>追加</button></li>`).join("")}</ul>`
-        : `<p class="note">今のチェックリストで十分そうです。</p>`;
+      inner = AI.list.length ? `<ul>${AI.list.map(s => `<li><span class="tt">${esc(s.title)}${s.note ? `<span>${esc(s.note)}</span>` : ""}</span></li>`).join("")}</ul>` : `<p class="note">上の提案で十分そうです。</p>`;
     } else inner = `<button class="btn small" type="button" data-act="ai"><svg><use href="#i-spark"/></svg>AIに追加の提案をもらう</button>`;
     ai = `<div class="ai"><h3><svg><use href="#i-spark"/></svg>AIからの追加提案</h3><p>この予定の内容をもとに、見落としがちな準備を3つまで提案します。</p>${inner}</div>`;
   }
-  return `<div class="prog"><h3>事前準備チェックリスト</h3><span class="mini num${p.total && p.done === p.total ? " is-done" : ""}">${ringHtml(pct, 28, 3.5)}${p.done}/${p.total}</span></div>
-    ${rows || `<p class="empty">${ev.routine ? "定型の予定なので、特別な準備はいりません。" : "この予定には準備の項目がありません。"}下から自由に追加できます。</p>`}
-    <div class="add"><label class="sr" for="add-item">項目を追加</label><input type="text" id="add-item" placeholder="項目を追加（例：手土産を買う）" autocomplete="off" enterkeyhint="done"><button class="btn primary" type="button" data-act="add-item" aria-label="追加"><svg><use href="#i-plus"/></svg></button></div>
+  const kv = [
+    ["日時", `<span class="num">${esc(jpDate(ev.start))} ${esc(when)}</span>`],
+    ev.location ? ["場所", esc(ev.location)] : null,
+    ev.attendees.length ? ["参加者", esc(ev.attendees.join("、"))] : null,
+    ev.reservation ? ["予約情報", esc(ev.reservation)] : null,
+    ["分類", `${esc(ev.cls.label)}・${LEVEL[lvl].label}`]
+  ].filter(Boolean).map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("");
+  $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div>
+      <div class="lvl"><span class="badge ${lvl}">${LEVEL[lvl].label}</span><p>${LEVEL[lvl].hint}</p></div></section>
+    <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">準備の提案</h2><span class="range">${items.length ? `${items.length}件` : ""}</span></div>
+    ${ev.cls.insight ? `<p class="hint" style="margin:0 0 10px"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
+    ${items.length ? `<div class="card" style="padding:4px 14px">${sugList(items, 0, ev)}</div>` : `<div class="card"><p class="empty">特別な準備はいりません。</p></div>`}
     ${ai}
-    ${p.total ? `<div class="toolbar"><button class="btn small" type="button" data-act="uncheck">チェックをすべて外す</button></div>` : ""}`;
+    <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">予定の詳細</h2></div>
+    <div class="card"><ul class="kv">${kv}</ul></div>
+    ${ev.description ? `<div class="info"><h3>説明</h3><p class="desc">${linkify(ev.description.slice(0, 2000))}${ev.description.length > 2000 ? "…" : ""}</p></div>` : ""}
+    ${safeHttp(ev.link) ? `<div class="toolbar"><a class="btn" href="${esc(safeHttp(ev.link))}" target="_blank" rel="noopener noreferrer"><svg><use href="#i-ext"/></svg>Googleカレンダーで開く</a></div>` : ""}`;
 }
 
 /* ---------- AIの追加提案（claude.ai の sample 機能） ---------- */
@@ -1096,32 +1043,11 @@ document.addEventListener("click", (e) => {
   if (act === "close"){ closeDetail(); return; }
   if (act === "settings"){ openSettings(); return; }
   if (act === "settings-close"){ closeSettings(); return; }
-  if (act === "filter"){ WEEKF = el.dataset.f === "all" ? "all" : Number(el.dataset.f); renderHome(); jumpTo("sec-tasks"); return; }
-  if (act === "expand"){ const id = el.dataset.id; if (EXPANDED.has(id)) EXPANDED.delete(id); else EXPANDED.add(id); renderHome(); return; }
-  if (act === "dtab"){ DTAB = el.dataset.t; renderDetail(); return; }
   if (act === "demo"){ loadDemo(); return; }
   if (act === "refresh"){ refresh(); return; }
-  if (act === "weeks"){ S.weeks = +el.dataset.w; saveSettings(); if (WEEKF !== "all" && WEEKF >= S.weeks) WEEKF = 0; if (mcp) startWatch(true); else if (META.demo) loadDemo(); renderAll(); renderSettings(); return; }
-  if (act === "wipe"){
-    if (el.dataset.armed !== "1"){
-      el.dataset.armed = "1"; el.textContent = "本当に消去する（もう一度タップ）";
-      clearTimeout(el._t); el._t = setTimeout(() => { el.dataset.armed = ""; el.textContent = "チェックとメモを消去"; }, 5000);
-      return;
-    }
-    ["chk:","custom:","memo:"].forEach(p => store.keys(p).forEach(k => store.del(k)));
-    AI = { busy:false, list:null, err:null, forId:null }; renderAll(); toast("消去しました"); return;
-  }
   const ev = DETAIL && byId(DETAIL);
   if (!ev) return;
-  if (act === "add-item"){ addCustom(ev); return; }
-  if (act === "rm-item"){ store.set(`custom:${ev.id}`, store.get(`custom:${ev.id}`, []).filter(c => c.id !== el.dataset.item)); const c = checks(ev); delete c[el.dataset.item]; store.set(`chk:${ev.id}`, c); renderDetail(); return; }
-  if (act === "uncheck"){ store.del(`chk:${ev.id}`); renderDetail(); toast("チェックを外しました"); return; }
   if (act === "ai"){ askAI(ev); return; }
-  if (act === "ai-add"){
-    const s = AI.list && AI.list[+el.dataset.i]; if (!s) return;
-    const list = store.get(`custom:${ev.id}`, []); list.push({ id:`c-${Date.now()}`, kind:"check", title:s.title, note:s.note || "" });
-    store.set(`custom:${ev.id}`, list); AI.list = AI.list.filter((_, i) => i !== +el.dataset.i); renderDetail(); toast("追加しました"); return;
-  }
 });
 document.addEventListener("submit", (e) => {
   const f = e.target.closest("[data-act]"); if (!f) return;
@@ -1131,12 +1057,6 @@ document.addEventListener("submit", (e) => {
 document.addEventListener("change", (e) => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const act = el.dataset.act;
-  if (act === "check"){
-    const ev = byId(el.dataset.ev || DETAIL); if (!ev) return;
-    const c = checks(ev); if (el.checked) c[el.dataset.item] = true; else delete c[el.dataset.item];
-    if (!store.set(`chk:${ev.id}`, c)) warnSave();
-    renderAll(); return;
-  }
   if (act === "hol"){ S.holidays = el.checked; saveSettings(); if (!S.holidays) HOL = {}; if (mcp) startHolidayWatch(); else if (FEED.available) loadFeed(false); renderHome(); return; }
   if (act === "cal"){ S.calendarId = el.value; saveSettings(); if (mcp){ EV = []; META.stamp = null; startWatch(true); } return; }
   if (act === "routine"){ S.routine = el.value.split(/[、,，\s]+/).map(s => s.trim()).filter(Boolean); saveSettings(); prepare(EV); renderHome(); toast("保存しました"); return; }
@@ -1144,34 +1064,13 @@ document.addEventListener("change", (e) => {
   if (act === "key"){ KEY = el.value.trim(); store.set("feedKey", KEY); if (KEY) loadFeed(true); return; }
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && e.target && e.target.id === "add-item"){ e.preventDefault(); const ev = DETAIL && byId(DETAIL); if (ev) addCustom(ev); }
   if (e.key === "Escape"){ if (DETAIL) closeDetail(); else if ($("settings-sheet").classList.contains("is-open")) closeSettings(); }
 });
-let memoTimer = null, memoPending = null, warnedSave = false;
-function warnSave(){ if (warnedSave) return; warnedSave = true; toast("保存できませんでした。プライベートブラウズでは保存されません"); }
-function flushMemo(){
-  clearTimeout(memoTimer); memoTimer = null;
-  if (!memoPending) return;
-  const { id, value } = memoPending; memoPending = null;
-  if (!store.set(`memo:${id}`, value)) warnSave();
-}
-document.addEventListener("input", (e) => {
-  const el = e.target; if (!el || el.dataset.act !== "memo" || !DETAIL) return;
-  memoPending = { id: DETAIL, value: el.value };
-  clearTimeout(memoTimer); memoTimer = setTimeout(flushMemo, 400);
-});
-document.addEventListener("focusout", (e) => { if (e.target && e.target.dataset && e.target.dataset.act === "memo") flushMemo(); });
-function addCustom(ev){
-  const inp = $("add-item"); const v = (inp && inp.value || "").trim(); if (!v) return;
-  const list = store.get(`custom:${ev.id}`, []); list.push({ id:`c-${Date.now()}`, kind:"check", title:v.slice(0, 80), note:"" });
-  if (!store.set(`custom:${ev.id}`, list)) warnSave();
-  renderDetail(); const again = $("add-item"); if (again) again.focus();
-}
 function saveSettings(){ store.set("settings", S); }
 
 /* ---------- カレンダー取得 ---------- */
 function windowArgs(now){
-  const from = startOfDay(now), to = addDays(from, S.weeks * 7);
+  const from = startOfDay(now), to = addDays(from, DAYS);
   const args = { startTime: isoLocal(from), endTime: isoLocal(to), orderBy:"startTime", pageSize:250, timeZone: tz() };
   if (S.calendarId) args.calendarId = S.calendarId;
   return args;
@@ -1322,9 +1221,11 @@ function demoPayload(now){
     T(9, 9, 0, 10, 30, "健康診断", { location:"クリニック" }),
     T(11, 14, 0, 16, 0, "プロジェクト企画会議", { description:"参加URL: https://meet.google.com/abc-defg-hij", attendees:[{ displayName:"田中" }, me] }),
     A(13, 2, "家族との旅行", { location:"箱根" }),
-    T(16, 10, 0, 11, 0, "採用面接", { location:"オンライン", description:"参加URL: https://meet.google.com/xyz" })
+    T(16, 10, 0, 11, 0, "採用面接", { location:"オンライン", description:"参加URL: https://meet.google.com/xyz" }),
+    A(24, 2, "大阪出張", { location:"大阪市" }),
+    T(27, 19, 0, 21, 0, "同期会", { location:"新宿" })
   ];
-  for (let d = 0; d < S.weeks * 7; d++){ const wd = at(d, 0, 0).getDay(); if (wd >= 1 && wd <= 5) events.push(T(d, 8, 30, 18, 30, "会社", { recurringEventId:"demo-work" })); }
+  for (let d = 0; d < DAYS; d++){ const wd = at(d, 0, 0).getDay(); if (wd >= 1 && wd <= 5) events.push(T(d, 8, 30, 18, 30, "会社", { recurringEventId:"demo-work" })); }
   return { events };
 }
 function loadDemo(){
@@ -1342,7 +1243,6 @@ setInterval(() => {
   if (watchedDay && k !== watchedDay){ watchedDay = k; if (mcp) startWatch(); else if (META.demo) loadDemo(); else if (FEED.available) loadFeed(false); }
 }, 60000);
 document.addEventListener("visibilitychange", () => {
-  flushMemo();
   if (document.visibilityState !== "visible") return;
   renderAll();
   if (!mcp && FEED.available && META.stamp && Date.now() - META.stamp > 10 * MIN) loadFeed(false);
