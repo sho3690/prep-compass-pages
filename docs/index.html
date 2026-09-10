@@ -660,7 +660,7 @@ function normalize(payload){
       title: String(e.summary || "").trim() || "（タイトルなし）",
       location: String(e.location || ""), description: String(e.description || ""),
       allDay, start, end, attendees, link: String(e.htmlLink || ""),
-      recurring: !!e.recurringEventId, fromGmail: e.eventType === "FROM_GMAIL", reservation: ""
+      recurring: !!e.recurringEventId, fromGmail: e.eventType === "FROM_GMAIL", reservation: "", updated: String(e.updated || "")
     };
     (ev.fromGmail ? gmail : out).push(ev);
   }
@@ -674,7 +674,24 @@ function normalize(payload){
   out.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title, "ja"));
   return out;
 }
-function prepare(events){ for (const ev of events){ ev.cls = classify(ev); ev.routine = ev.cls.key === "routine"; ev.move = ev.cls.key === "move"; } return events; }
+let SUG = {};                                 // 予定ID → AIが作った提案（同期データ or claude.ai の sample）
+function normalizeSug(v){
+  if (!v || typeof v !== "object") return null;
+  const items = (Array.isArray(v.items) ? v.items : []).slice(0, 6)
+    .map((it, i) => ({ id:`ai-${i}`, kind: (it && KIND[it.kind]) ? it.kind : "check", title: String(it && it.title || "").trim().slice(0, 40), note: String(it && it.note || "").trim().slice(0, 40) }))
+    .filter(it => it.title);
+  return { needsPrep: v.needsPrep !== false && items.length > 0, category: String(v.category || "").trim().slice(0, 12), hint: String(v.hint || "").trim().slice(0, 90), items, updated: String(v.updated || "") };
+}
+function prepare(events){
+  for (const ev of events){
+    ev.cls = classify(ev); ev.routine = ev.cls.key === "routine"; ev.move = ev.cls.key === "move";
+    const sg = SUG[ev.id];
+    if (sg && !ev.routine && !ev.move){
+      ev.cls = { key:"ai", label: sg.category || ev.cls.label, level: sg.needsPrep ? "prep" : "easy", items: sg.items, insight: sg.hint || null };
+    }
+  }
+  return events;
+}
 
 /* ---------- 提案（チェック状態は持たない） ---------- */
 function itemsOf(ev){ return ev.cls.items; }
@@ -914,7 +931,7 @@ function renderSettings(){
     <div class="info"><h3>このアプリについて</h3>
       <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。設定と「済み」のチェックはこの端末の中だけに保存され、外部には送られません。</p>
       <p style="margin-top:8px">${mcp ? "「AIに追加の提案をもらう」や AI への相談を使ったときだけ、その予定の内容が claude.ai の Claude に送られます。" : `AIへの相談は <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> で使えます。`}</p>
-      <p class="meta">準備の判定と提案は、予定のタイトルと場所のキーワードから決めています。1ヶ月先までの予定のうち、準備がいりそうなものだけを表示します。</p></div>`;
+      <p class="meta">準備の提案は、AI が予定の内容（タイトル・場所・説明・参加者・前後の予定）を読んでその予定ごとに考えます${mcp ? "（このページを開いたとき、まだ提案のない予定だけ生成し、この端末に保存します）" : "（Mac の同期のたびに、新しい予定・変わった予定だけ生成します）"}。AI の提案がまだ無い予定は、キーワードによる標準の提案でつなぎます。1ヶ月先までの予定のうち、準備がいりそうなものだけを表示します。</p></div>`;
 }
 
 /* ---------- 描画：詳細シート ---------- */
@@ -1115,6 +1132,7 @@ async function applyPayload(result, input){
   EV = prepare(normalize({ events }));
   META = { ok:true, demo:false, loading:false, error:null, stamp: (result && result.cache && result.cache.storedAt) || Date.now() };
   renderAll();
+  generateSuggestions();
 }
 function startWatch(force){
   if (!mcp) return;
@@ -1174,6 +1192,42 @@ async function loadCalendars(){
 }
 
 
+/* ---------- claude.ai 版: まだ提案のない予定だけ AI に考えてもらう（端末に保存して使い回す） ---------- */
+let sugBusy = false;
+async function generateSuggestions(){
+  if (!sampleFn || sugBusy || META.demo) return;
+  const now = new Date();
+  const list = visible(now).filter(ev => !ev.routine && !ev.move);
+  // 端末に保存済みの提案を先に反映
+  let changed = false;
+  for (const ev of list){ if (!SUG[ev.id]){ const saved = store.get(`sug:${ev.id}`, null); if (saved && saved.updated === ev.updated){ SUG[ev.id] = saved; changed = true; } } }
+  if (changed){ prepare(EV); renderAll(); }
+  const todo = list.filter(ev => !SUG[ev.id]).slice(0, 25);
+  if (!todo.length) return;
+  sugBusy = true;
+  const ctx = todo.map(ev => ({ id: ev.id, title: ev.title, when: `${jpDate(ev.start)} ${ev.allDay ? "終日" : `${hhmm(ev.start)}–${hhmm(ev.end)}`}`, location: ev.location || "", attendees: ev.attendees.slice(0, 5), reservation: ev.reservation || "", description: (ev.description || "").replace(/\s+/g, " ").slice(0, 300) }));
+  const around = list.map(ev => `${md(ev.start)} ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}`).join(" / ");
+  const prompt = `あなたは予定の事前準備を考える秘書です。次の各予定について、その予定の内容（タイトル・場所・説明・参加者・予約情報・日時・前後の予定）を読み、その予定に本当に必要な準備だけを日本語で考えてください。テンプレートではなく内容に合わせ、同じ意味の項目を繰り返さないでください。準備がほぼ不要な予定は needsPrep を false にして items を空にします。
+
+今日: ${jpDate(now)}
+前後の予定（参考）: ${around}
+
+対象の予定（JSON）:
+${JSON.stringify(ctx)}
+
+出力は次の形の JSON オブジェクトのみ（キーは予定の id）:
+{"<id>": {"needsPrep": true, "category": "短いカテゴリ名（例: 食事・飲み会）", "hint": "その予定ならではの一言アドバイス（50字以内）", "items": [{"kind": "doc|bag|route|phone|bell|book|heart|shirt|wallet|check", "title": "20字以内", "note": "補足20字以内（不要なら空）"}]}}
+items は 2〜6 件。kind は 資料=doc, 持ち物=bag, 移動=route, 連絡=phone, リマインド=bell, 予約=book, 体調=heart, 服装=shirt, 支払い=wallet, 確認=check。`;
+  try{
+    const res = await sampleFn.json(prompt, { modelTier:"default" });
+    if (res && typeof res === "object"){
+      for (const ev of todo){ const n = normalizeSug(res[ev.id]); if (n){ n.updated = ev.updated; SUG[ev.id] = n; store.set(`sug:${ev.id}`, n); } }
+      prepare(EV); renderAll();
+    }
+  }catch(e){ /* 断られた・失敗したときはキーワード方式のまま */ }
+  finally{ sugBusy = false; }
+}
+
 /* ---------- 同期データ（GitHub Pages 版）: OpenSSL enc -aes-256-cbc -pbkdf2 形式を復号 ---------- */
 async function decryptFeed(buf, pass){
   const u = new Uint8Array(buf);
@@ -1199,6 +1253,9 @@ async function loadFeed(force){
     let payload;
     try{ payload = JSON.parse(await decryptFeed(buf, KEY)); }
     catch(e){ if (e && e.code === "feed_error") throw e; throw Object.assign(new Error("bad key"), { code:"bad_key" }); }
+    SUG = {};
+    const sgs = payload.suggestions && payload.suggestions.events;
+    if (sgs && typeof sgs === "object") for (const [id, v] of Object.entries(sgs)){ const n = normalizeSug(v); if (n) SUG[id] = n; }
     EV = prepare(normalize(payload));
     const map = {};
     if (S.holidays) for (const e of (Array.isArray(payload.holidays) ? payload.holidays : [])){
@@ -1251,7 +1308,7 @@ function demoPayload(now){
   return { events };
 }
 function loadDemo(){
-  watchedDay = dayKey(new Date());
+  watchedDay = dayKey(new Date()); SUG = {};
   EV = prepare(normalize(demoPayload(new Date())));
   META = { ok:true, demo:true, loading:false, error:null, stamp:null, source:"demo" };
   renderAll(); toast("サンプルの予定を表示しています");
