@@ -396,7 +396,6 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
           <svg class="chev"><use href="#i-right"/></svg>
         </button>
         <div id="h-notice"></div>
-        <div class="tiles" id="h-tiles" role="group" aria-label="期間ごとの予定数"></div>
       </section>
 
       <section class="sec" id="sec-tasks" aria-label="予定と準備">
@@ -713,8 +712,8 @@ function monthSummary(events, now){
   const all = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy").sort((a, b) => a.start - b.start);
   const main = all.filter(ev => !isFinished(ev)), finished = all.filter(isFinished);
   const prep = main.filter(ev => ev.cls.level === "prep"), check = main.filter(ev => ev.cls.level === "check");
-  const urgent = prep.find(ev => bucketDay(ev, now) <= 2) || null;
-  const weekPrep = prep.filter(ev => bucketDay(ev, now) <= 6);
+  const urgent = main.find(ev => bucketDay(ev, now) <= 2) || null;
+  const weekPrep = main.filter(ev => bucketDay(ev, now) <= 6);
   return { main, finished, prep, check, urgent, weekPrep };
 }
 function weekName(w){ return ["今週", "来週", "再来週", "その先"][Math.min(w, 3)]; }
@@ -762,9 +761,8 @@ function bubbleText(sm, now){
   if (!META.ok && !META.demo) return "まだ予定を読み込めていません。下の案内を確認してください。";
   if (!sm.main.length) return sm.finished.length ? "この1ヶ月の準備はすべて済んでいます。おつかれさまです。" : "この1ヶ月、特別な準備がいる予定はありません。ゆっくり過ごせそうです。";
   if (sm.urgent) return `${relDay(bucketDay(sm.urgent, now))}の「${sm.urgent.title}」に向けて、そろそろ準備を始めましょう。`;
-  if (sm.weekPrep.length) return `今週は要準備の予定が${sm.weekPrep.length}件あります。早めに手をつけると、余裕のある一週間になります。`;
-  if (sm.prep.length) return `この1ヶ月で要準備の予定は${sm.prep.length}件。いちばん近いのは${relDay(bucketDay(sm.prep[0], now))}の「${sm.prep[0].title}」です。`;
-  return `この1ヶ月は確認だけで済む予定が${sm.check.length}件。予約や時間の確認をしておきましょう。`;
+  if (sm.weekPrep.length) return `今週は準備がいる予定が${sm.weekPrep.length}件あります。早めに手をつけると、余裕のある一週間になります。`;
+  return `この1ヶ月で準備がいる予定は${sm.main.length}件。いちばん近いのは${relDay(bucketDay(sm.main[0], now))}の「${sm.main[0].title}」です。`;
 }
 function renderStatus(){
   const st = $("h-status");
@@ -792,11 +790,6 @@ function renderGreeting(sm, now){
   $("h-greet").innerHTML = greeting(now);
   $("h-bubble").innerHTML = `<p>${esc(bubbleText(sm, now))}</p>`;
 }
-function renderStats(sm){
-  $("h-tiles").style.gridTemplateColumns = "repeat(2, 1fr)";
-  $("h-tiles").innerHTML = `<div class="tile"><span class="lbl"><i class="dot prep"></i>要準備</span><b class="num">${sm.prep.length}<small>件</small></b></div>
-    <div class="tile"><span class="lbl"><i class="dot check"></i>確認のみ</span><b class="num">${sm.check.length}<small>件</small></b></div>`;
-}
 
 /* ---------- 描画：予定と準備の提案（要準備・確認のみの予定だけ。1ヶ月ぶん） ---------- */
 function sugList(ev, max){
@@ -812,8 +805,8 @@ function sugCard(ev, now){
   return `<article class="task">
     <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
       <span class="dcol ${dayClass(dd, hol)}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]}${hol ? "・祝" : ""} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
-      <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${badge(ev)}${kindChip(ev)}</span></span>
-      <span class="due${d <= 2 && ev.cls.level === "prep" ? " soon" : ""} num">${relDay(d)}</span></button>
+      <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${kindChip(ev)}</span></span>
+      <span class="due${d <= 2 ? " soon" : ""} num">${relDay(d)}</span></button>
     ${ev.cls.insight ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
     ${sugList(ev, 4)}</article>`;
 }
@@ -843,8 +836,8 @@ function briefing(events, now){
   if (busy.length) out.push({ tone:"amber", icon:"i-alert", text:`${busy.slice(0, 2).map(d => `${md(d)}（${WD[d.getDay()]}）`).join("・")}は予定が3件以上。移動と休憩に余裕を持たせましょう。` });
   const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < DAYS; });
   if (hols.length) out.push({ tone:"rose", icon:"i-cal", text:`${hols.slice(0, 3).map(k => `${md(localDate(k))} ${HOL[k]}`).join("、")}。休みの前後は、予約や締切のずれに注意。` });
-  const far = main.filter(ev => ev.cls.level === "prep" && bucketDay(ev, now) >= 14 && !isFinished(ev));
-  if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先の要準備は${far.length}件：${far.slice(0, 3).map(ev => `${ev.title}（${md(ev.start)}）`).join("、")}。交通や宿の予約は今のうちに。` });
+  const far = main.filter(ev => bucketDay(ev, now) >= 14 && !isFinished(ev));
+  if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先で準備がいる予定は${far.length}件：${far.slice(0, 3).map(ev => `${ev.title}（${md(ev.start)}）`).join("、")}。交通や宿の予約は今のうちに。` });
   return out;
 }
 function renderAssistant(events, now){
@@ -864,13 +857,13 @@ async function askAssistant(q){
   const now = new Date();
   const ctx = visible(now).filter(ev => !ev.move && !ev.routine).slice(0, 40).map(ev => {
     const todo = pendingItems(ev).map(it => it.title).slice(0, 5);
-    return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}]${todo.length ? `：提案 ${todo.join("、")}` : ""}`;
+    return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} ${todo.length ? `：提案 ${todo.join("、")}` : ""}`;
   }).join("\n");
   CHAT = { busy:true, q, a:"", err:null }; renderHome();
   const prompt = `あなたは「Sakiyomi（先読み）」というアプリのAI秘書です。ユーザーの今後の予定と準備状況をもとに、質問に日本語で答えてください。
 
 今日: ${jpDate(now)}
-今後1ヶ月の予定（日付順。[ ]は準備の重さ、その後ろはアプリが出している準備の提案）:
+今後1ヶ月の予定（日付順。コロンの後ろはアプリが出している準備の提案）:
 ${ctx || "（予定はありません）"}
 
 ユーザーの質問: ${q.slice(0, 500)}
@@ -893,7 +886,6 @@ function renderHome(){
   renderStatus();
   const events = visible(now), sm = monthSummary(events, now);
   renderGreeting(sm, now);
-  renderStats(sm);
   renderTasks(sm, now);
   renderAssistant(events, now);
 }
@@ -922,7 +914,7 @@ function renderSettings(){
     <div class="info"><h3>このアプリについて</h3>
       <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。設定と「済み」のチェックはこの端末の中だけに保存され、外部には送られません。</p>
       <p style="margin-top:8px">${mcp ? "「AIに追加の提案をもらう」や AI への相談を使ったときだけ、その予定の内容が claude.ai の Claude に送られます。" : `AIへの相談は <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> で使えます。`}</p>
-      <p class="meta">準備の判定と提案は、予定のタイトルと場所のキーワードから決めています。1ヶ月先までの予定を表示し、準備不要のものは出しません。</p></div>`;
+      <p class="meta">準備の判定と提案は、予定のタイトルと場所のキーワードから決めています。1ヶ月先までの予定のうち、準備がいりそうなものだけを表示します。</p></div>`;
 }
 
 /* ---------- 描画：詳細シート ---------- */
@@ -961,7 +953,7 @@ function linkify(text){
 }
 function renderDetail(){
   const ev = byId(DETAIL); if (!ev) return;
-  const now = new Date(), d = bucketDay(ev, now), lvl = ev.cls.level, items = itemsOf(ev), pending = pendingItems(ev);
+  const now = new Date(), d = bucketDay(ev, now), items = itemsOf(ev), pending = pendingItems(ev);
   $("sh-when").textContent = `${jpDate(ev.start)}・${relDay(d)}`;
   const when = ev.allDay ? `${timeText(ev)}${daysUntil(ev.end, ev.start) > 0 ? `（${md(ev.start)}〜${md(ev.end)}）` : ""}` : `${hhmm(ev.start)}–${hhmm(ev.end)}（${durText(ev.end - ev.start)}）`;
   const meta = [
@@ -984,10 +976,9 @@ function renderDetail(){
     ev.location ? ["場所", esc(ev.location)] : null,
     ev.attendees.length ? ["参加者", esc(ev.attendees.join("、"))] : null,
     ev.reservation ? ["予約情報", esc(ev.reservation)] : null,
-    ["分類", `${esc(ev.cls.label)}・${LEVEL[lvl].label}`]
+    ["分類", esc(ev.cls.label)]
   ].filter(Boolean).map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("");
-  $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div>
-      <div class="lvl"><span class="badge ${lvl}">${LEVEL[lvl].label}</span><p>${LEVEL[lvl].hint}</p></div></section>
+  $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div></section>
     <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">準備の提案</h2><span class="range">${items.length ? `残り${pending.length}件 / ${items.length}件` : ""}</span></div>
     ${ev.cls.insight && pending.length ? `<p class="hint" style="margin:0 0 10px"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
     ${items.length ? `<div class="card" style="padding:4px 0">${pending.length ? sugList(ev, 0) : `<p class="empty">この予定の準備はすべて済みました。</p>${doneCount(ev) ? `<div class="sug-foot"><span>済み ${doneCount(ev)}件</span><button type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>` : ""}`}</div>` : `<div class="card"><p class="empty">特別な準備はいりません。</p></div>`}
