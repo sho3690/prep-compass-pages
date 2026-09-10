@@ -185,6 +185,14 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .sug b{display:block; font-size:.9rem; font-weight:600; color:var(--ink); line-height:1.4}
 .sug small{display:block; font-size:.76rem; color:var(--ink-3); margin-top:1px}
 .sug .mo{padding:0; border-top:0}
+.sug .sgrow{display:flex; gap:10px; align-items:center; width:100%; cursor:pointer; min-width:0}
+.sug .tx{flex:1; min-width:0}
+.sug input{width:22px; height:22px; accent-color:var(--primary); margin:0; flex:none}
+.sug li.is-going{opacity:.25; transition:opacity .2s}
+.sug-foot{display:flex; justify-content:space-between; align-items:center; padding:2px 14px 10px; font-size:.78rem; color:var(--ink-3)}
+.sug-foot button{background:none; border:0; color:var(--primary); font-weight:600; font-size:.8rem; padding:6px 8px; min-height:32px}
+.finished .rrow .btn{margin-left:auto}
+.finished .rrow span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .tile .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; background:var(--hair)}
 .tile .dot.prep{background:var(--rose-soft)} .tile .dot.check{background:var(--amber-soft)}
 
@@ -672,6 +680,13 @@ function prepare(events){ for (const ev of events){ ev.cls = classify(ev); ev.ro
 /* ---------- 提案（チェック状態は持たない） ---------- */
 function itemsOf(ev){ return ev.cls.items; }
 function effLevel(ev){ return ev.cls.level; }
+/* 済みにした提案は端末に覚えておき、一覧から消す */
+function doneMap(ev){ return store.get(`done:${ev.id}`, {}) || {}; }
+function pendingItems(ev){ const d = doneMap(ev); return itemsOf(ev).filter(it => !d[it.id]); }
+function doneCount(ev){ const d = doneMap(ev); return itemsOf(ev).filter(it => d[it.id]).length; }
+function isFinished(ev){ return itemsOf(ev).length > 0 && pendingItems(ev).length === 0; }
+function markDone(ev, itemId, on){ const d = doneMap(ev); if (on) d[itemId] = true; else delete d[itemId]; if (Object.keys(d).length) store.set(`done:${ev.id}`, d); else store.del(`done:${ev.id}`); }
+function resetDone(ev){ store.del(`done:${ev.id}`); }
 
 /* ---------- 状態 ---------- */
 let EV = [];                                  // 正規化・分類済みの予定
@@ -695,11 +710,12 @@ function bucketWeek(ev, now){ return Math.floor(bucketDay(ev, now) / 7); }
 
 /* ---------- 1ヶ月のまとめ ---------- */
 function monthSummary(events, now){
-  const main = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy").sort((a, b) => a.start - b.start);
+  const all = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy").sort((a, b) => a.start - b.start);
+  const main = all.filter(ev => !isFinished(ev)), finished = all.filter(isFinished);
   const prep = main.filter(ev => ev.cls.level === "prep"), check = main.filter(ev => ev.cls.level === "check");
   const urgent = prep.find(ev => bucketDay(ev, now) <= 2) || null;
   const weekPrep = prep.filter(ev => bucketDay(ev, now) <= 6);
-  return { main, prep, check, urgent, weekPrep };
+  return { main, finished, prep, check, urgent, weekPrep };
 }
 function weekName(w){ return ["今週", "来週", "再来週", "その先"][Math.min(w, 3)]; }
 
@@ -744,7 +760,7 @@ function greeting(now){
 function bubbleText(sm, now){
   if (META.loading) return "予定を読み込んでいます。少しお待ちください。";
   if (!META.ok && !META.demo) return "まだ予定を読み込めていません。下の案内を確認してください。";
-  if (!sm.main.length) return "この1ヶ月、特別な準備がいる予定はありません。ゆっくり過ごせそうです。";
+  if (!sm.main.length) return sm.finished.length ? "この1ヶ月の準備はすべて済んでいます。おつかれさまです。" : "この1ヶ月、特別な準備がいる予定はありません。ゆっくり過ごせそうです。";
   if (sm.urgent) return `${relDay(bucketDay(sm.urgent, now))}の「${sm.urgent.title}」に向けて、そろそろ準備を始めましょう。`;
   if (sm.weekPrep.length) return `今週は要準備の予定が${sm.weekPrep.length}件あります。早めに手をつけると、余裕のある一週間になります。`;
   if (sm.prep.length) return `この1ヶ月で要準備の予定は${sm.prep.length}件。いちばん近いのは${relDay(bucketDay(sm.prep[0], now))}の「${sm.prep[0].title}」です。`;
@@ -783,20 +799,23 @@ function renderStats(sm){
 }
 
 /* ---------- 描画：予定と準備の提案（要準備・確認のみの予定だけ。1ヶ月ぶん） ---------- */
-function sugList(items, max, ev){
-  const shown = max ? items.slice(0, max) : items;
-  return `<ul class="sug">${shown.map(it => { const k = KIND[it.kind] || KIND.check; return `<li><span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span><span><b>${esc(it.title)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ""}</span></li>`; }).join("")}
-    ${max && items.length > max ? `<li class="mo"><button class="more" type="button" data-act="open" data-id="${esc(ev.id)}">他${items.length - max}件の提案を見る<svg><use href="#i-right"/></svg></button></li>` : ""}</ul>`;
+function sugList(ev, max){
+  const items = pendingItems(ev), shown = max ? items.slice(0, max) : items, done = doneCount(ev);
+  const rows = shown.map((it, i) => { const k = KIND[it.kind] || KIND.check, cid = `d-${esc(ev.id)}-${i}`;
+    return `<li><label class="sgrow" for="${cid}"><span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span><span class="tx"><b>${esc(it.title)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ""}</span><input type="checkbox" id="${cid}" data-act="done" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}" aria-label="${esc(it.title)} を済みにする"></label></li>`; }).join("");
+  const more = max && items.length > max ? `<li class="mo"><button class="more" type="button" data-act="open" data-id="${esc(ev.id)}">他${items.length - max}件の提案を見る<svg><use href="#i-right"/></svg></button></li>` : "";
+  const foot = done ? `<div class="sug-foot"><span>済み ${done}件</span><button type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>` : "";
+  return `<ul class="sug">${rows}${more}</ul>${foot}`;
 }
 function sugCard(ev, now){
-  const d = bucketDay(ev, now), dd = ev.start, hol = HOL[dayKey(dd)], items = itemsOf(ev);
+  const d = bucketDay(ev, now), dd = ev.start, hol = HOL[dayKey(dd)];
   return `<article class="task">
     <button class="task-h" type="button" data-act="open" data-id="${esc(ev.id)}">
       <span class="dcol ${dayClass(dd, hol)}"><b class="num">${md(dd)}</b><span class="num">${WD[dd.getDay()]}${hol ? "・祝" : ""} ${ev.allDay ? "終日" : hhmm(dd)}</span></span>
       <span class="tcol"><b>${esc(ev.title)}</b>${locHtml(ev)}<span class="bd">${badge(ev)}${kindChip(ev)}</span></span>
       <span class="due${d <= 2 && ev.cls.level === "prep" ? " soon" : ""} num">${relDay(d)}</span></button>
     ${ev.cls.insight ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
-    ${items.length ? sugList(items, 4, ev) : ""}</article>`;
+    ${sugList(ev, 4)}</article>`;
 }
 function renderTasks(sm, now){
   const groups = [[], [], [], []];
@@ -808,8 +827,9 @@ function renderTasks(sm, now){
     const from = addDays(today, w * 7), to = w < 3 ? addDays(from, 6) : addDays(today, DAYS - 1);
     html += `<div class="wk-h">${weekName(w)}<span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>` + g.map(ev => sugCard(ev, now)).join("");
   });
-  $("tasks-note").textContent = sm.main.length ? `1ヶ月で${sm.main.length}件。準備不要の予定は表示していません` : "";
-  $("h-tasks").innerHTML = html || `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : "この1ヶ月、準備がいる予定はありません。"}</p></div>`;
+  if (sm.finished.length) html += `<div class="routine-box finished"><details class="routine"><summary><span class="n">準備が完了した予定 ${sm.finished.length}件</span><span class="badge done">完了</span><svg><use href="#i-right"/></svg></summary>${sm.finished.map(ev => `<div class="rrow"><b class="num">${md(ev.start)}（${WD[ev.start.getDay()]}）</b><span>${esc(ev.title)}</span><button class="btn small" type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>`).join("")}</details></div>`;
+  $("tasks-note").textContent = sm.main.length ? `1ヶ月で${sm.main.length}件。チェックすると消えます` : "";
+  $("h-tasks").innerHTML = html || `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : sm.finished.length ? "この1ヶ月の準備はすべて済みました。" : "この1ヶ月、準備がいる予定はありません。"}</p></div>`;
 }
 
 /* ---------- 描画：AIアシスタント（予定単位ではなく、全体の見通しと相談） ---------- */
@@ -823,7 +843,7 @@ function briefing(events, now){
   if (busy.length) out.push({ tone:"amber", icon:"i-alert", text:`${busy.slice(0, 2).map(d => `${md(d)}（${WD[d.getDay()]}）`).join("・")}は予定が3件以上。移動と休憩に余裕を持たせましょう。` });
   const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < DAYS; });
   if (hols.length) out.push({ tone:"rose", icon:"i-cal", text:`${hols.slice(0, 3).map(k => `${md(localDate(k))} ${HOL[k]}`).join("、")}。休みの前後は、予約や締切のずれに注意。` });
-  const far = main.filter(ev => ev.cls.level === "prep" && bucketDay(ev, now) >= 14);
+  const far = main.filter(ev => ev.cls.level === "prep" && bucketDay(ev, now) >= 14 && !isFinished(ev));
   if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先の要準備は${far.length}件：${far.slice(0, 3).map(ev => `${ev.title}（${md(ev.start)}）`).join("、")}。交通や宿の予約は今のうちに。` });
   return out;
 }
@@ -843,7 +863,7 @@ async function askAssistant(q){
   if (!sampleFn || CHAT.busy || !q) return;
   const now = new Date();
   const ctx = visible(now).filter(ev => !ev.move && !ev.routine).slice(0, 40).map(ev => {
-    const todo = itemsOf(ev).map(it => it.title).slice(0, 5);
+    const todo = pendingItems(ev).map(it => it.title).slice(0, 5);
     return `- ${md(ev.start)}(${WD[ev.start.getDay()]}) ${ev.allDay ? "終日" : hhmm(ev.start)} ${ev.title}${ev.location ? ` @${ev.location}` : ""} [${LEVEL[ev.cls.level].label}]${todo.length ? `：提案 ${todo.join("、")}` : ""}`;
   }).join("\n");
   CHAT = { busy:true, q, a:"", err:null }; renderHome();
@@ -896,10 +916,11 @@ function renderSettings(){
     <div class="field"><label class="switch" for="st-hol"><span>祝日を表示する<br><span class="help" style="display:block;margin:0">日本の祝日カレンダーを読み込みます</span></span><input type="checkbox" id="st-hol" data-act="hol"${S.holidays ? " checked" : ""}></label></div>
     <div class="field"><label for="st-routine">表示しない定型の予定</label><p class="help">Google カレンダーで「繰り返し」に設定した予定のうち、この言葉で始まるものは「準備不要」として表示しません。読点（、）かカンマで区切ってください。</p>
       <input type="text" id="st-routine" value="${esc(S.routine.join("、"))}" data-act="routine" autocomplete="off"></div>
-    <div class="toolbar"><button class="btn" type="button" data-act="refresh"><svg><use href="#i-refresh"/></svg>最新の予定を読み込む</button></div>
+    <div class="toolbar"><button class="btn" type="button" data-act="refresh"><svg><use href="#i-refresh"/></svg>最新の予定を読み込む</button>
+      <button class="btn" type="button" data-act="undo-all">済みにした提案をすべて戻す</button></div>
     <div class="info"><h3>ホーム画面に追加する</h3><ol><li>iPhone の Safari でこのページを開く</li><li>下の共有ボタン（□に↑）をタップ</li><li>「ホーム画面に追加」を選ぶ</li></ol><p class="meta">アプリのように起動できます。</p></div>
     <div class="info"><h3>このアプリについて</h3>
-      <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。設定はこの端末の中だけに保存され、外部には送られません。</p>
+      <p>${mcp ? "Google カレンダーは claude.ai の連携機能を通して読み込みます。" : "予定は Mac の定期タスクが Google カレンダーから取得し、暗号化してこのサイトに置いたものを、この端末で合言葉を使って開いています。"}パスワードや秘密の鍵のような情報は、このページには一切入っていません。設定と「済み」のチェックはこの端末の中だけに保存され、外部には送られません。</p>
       <p style="margin-top:8px">${mcp ? "「AIに追加の提案をもらう」や AI への相談を使ったときだけ、その予定の内容が claude.ai の Claude に送られます。" : `AIへの相談は <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> で使えます。`}</p>
       <p class="meta">準備の判定と提案は、予定のタイトルと場所のキーワードから決めています。1ヶ月先までの予定を表示し、準備不要のものは出しません。</p></div>`;
 }
@@ -940,7 +961,7 @@ function linkify(text){
 }
 function renderDetail(){
   const ev = byId(DETAIL); if (!ev) return;
-  const now = new Date(), d = bucketDay(ev, now), lvl = ev.cls.level, items = itemsOf(ev);
+  const now = new Date(), d = bucketDay(ev, now), lvl = ev.cls.level, items = itemsOf(ev), pending = pendingItems(ev);
   $("sh-when").textContent = `${jpDate(ev.start)}・${relDay(d)}`;
   const when = ev.allDay ? `${timeText(ev)}${daysUntil(ev.end, ev.start) > 0 ? `（${md(ev.start)}〜${md(ev.end)}）` : ""}` : `${hhmm(ev.start)}–${hhmm(ev.end)}（${durText(ev.end - ev.start)}）`;
   const meta = [
@@ -967,9 +988,9 @@ function renderDetail(){
   ].filter(Boolean).map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join("");
   $("sh-body").innerHTML = `<section class="hero"><p class="cat">${esc(ev.cls.label)}</p><h2 id="sh-title">${esc(ev.title)}</h2><div class="meta">${meta}</div>
       <div class="lvl"><span class="badge ${lvl}">${LEVEL[lvl].label}</span><p>${LEVEL[lvl].hint}</p></div></section>
-    <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">準備の提案</h2><span class="range">${items.length ? `${items.length}件` : ""}</span></div>
-    ${ev.cls.insight ? `<p class="hint" style="margin:0 0 10px"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
-    ${items.length ? `<div class="card" style="padding:4px 14px">${sugList(items, 0, ev)}</div>` : `<div class="card"><p class="empty">特別な準備はいりません。</p></div>`}
+    <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">準備の提案</h2><span class="range">${items.length ? `残り${pending.length}件 / ${items.length}件` : ""}</span></div>
+    ${ev.cls.insight && pending.length ? `<p class="hint" style="margin:0 0 10px"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
+    ${items.length ? `<div class="card" style="padding:4px 0">${pending.length ? sugList(ev, 0) : `<p class="empty">この予定の準備はすべて済みました。</p>${doneCount(ev) ? `<div class="sug-foot"><span>済み ${doneCount(ev)}件</span><button type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>` : ""}`}</div>` : `<div class="card"><p class="empty">特別な準備はいりません。</p></div>`}
     ${ai}
     <div class="sec-h" style="margin-top:20px"><h2 style="font-size:1rem">予定の詳細</h2></div>
     <div class="card"><ul class="kv">${kv}</ul></div>
@@ -1047,6 +1068,8 @@ document.addEventListener("click", (e) => {
   if (act === "demo"){ loadDemo(); return; }
   if (act === "refresh"){ refresh(); return; }
   const ev = DETAIL && byId(DETAIL);
+  if (act === "undo"){ const t = byId(el.dataset.id); if (t){ resetDone(t); renderAll(); toast("戻しました"); } return; }
+  if (act === "undo-all"){ store.keys("done:").forEach(k => store.del(k)); renderAll(); toast("すべて戻しました"); return; }
   if (!ev) return;
   if (act === "ai"){ askAI(ev); return; }
 });
@@ -1058,6 +1081,13 @@ document.addEventListener("submit", (e) => {
 document.addEventListener("change", (e) => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const act = el.dataset.act;
+  if (act === "done"){
+    const t = byId(el.dataset.ev); if (!t) return;
+    const li = el.closest("li");
+    const finish = () => { markDone(t, el.dataset.item, el.checked); const fin = isFinished(t); renderAll(); if (el.checked && fin) toast(`「${t.title}」の準備はすべて済みました`); };
+    if (el.checked && li && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){ li.classList.add("is-going"); setTimeout(finish, 220); } else finish();
+    return;
+  }
   if (act === "hol"){ S.holidays = el.checked; saveSettings(); if (!S.holidays) HOL = {}; if (mcp) startHolidayWatch(); else if (FEED.available) loadFeed(false); renderHome(); return; }
   if (act === "cal"){ S.calendarId = el.value; saveSettings(); if (mcp){ EV = []; META.stamp = null; startWatch(true); } return; }
   if (act === "routine"){ S.routine = el.value.split(/[、,，\s]+/).map(s => s.trim()).filter(Boolean); saveSettings(); prepare(EV); renderHome(); toast("保存しました"); return; }
