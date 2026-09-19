@@ -86,16 +86,33 @@ button{cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .icon-btn.is-spin svg{animation:none} }
 main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
-.page{padding:6px 18px 40px}
+.page{padding:6px 18px calc(40px + env(safe-area-inset-bottom))}
 
 /* ---------- あいさつ・AI秘書 ---------- */
 .eyebrow{font-size:.78rem; color:var(--ink-3); font-weight:500; margin:0}
 .greet h1{font-size:1.5rem; line-height:1.35; font-weight:700; letter-spacing:-.01em; margin:2px 0 12px; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
 .greet h1 .wx{width:26px; height:26px; color:var(--amber-soft)}
-.assistant{display:flex; gap:10px; align-items:flex-start}
-.avatar{width:44px; height:44px; flex:none; border-radius:50%; box-shadow:0 6px 16px rgba(99,102,241,.25)}
-.avatar svg{width:44px; height:44px; display:block}
-.bubble{flex:1; min-width:0; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center}
+.assistant{display:flex; gap:12px; align-items:flex-start}
+.avatar{width:56px; height:56px; flex:none; border-radius:50%; border:0; padding:0; background:none; display:block; position:relative; box-shadow:0 8px 20px rgba(99,102,241,.28); transform-origin:50% 100%; animation:av-float 3.6s ease-in-out infinite}
+.avatar:focus-visible{border-radius:50%}
+.avatar svg{width:56px; height:56px; display:block; overflow:visible}
+.avatar .eye{transform-box:fill-box; transform-origin:center; animation:av-blink 4.6s ease-in-out infinite}
+.avatar .eye.r{animation-delay:.06s}
+.avatar .mouth{transform-box:fill-box; transform-origin:center; transition:transform .25s, opacity .25s}
+.avatar.is-talking{animation:av-talk .9s ease-in-out 2}
+.avatar.is-talking .mouth{animation:av-mouth .28s ease-in-out infinite alternate}
+.avatar.is-thinking .eye{animation:none; transform:translate(1.3px,-1.5px)}
+.avatar.is-thinking .mouth{transform:scale(.55) translateY(1px)}
+.avatar.is-hop{animation:av-hop .6s cubic-bezier(.3,1.4,.5,1)}
+@keyframes av-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes av-blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+@keyframes av-talk{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-2px) rotate(-4deg)}75%{transform:translateY(-2px) rotate(4deg)}}
+@keyframes av-mouth{from{transform:scaleY(.5)}to{transform:scaleY(1.35) scaleX(.9)}}
+@keyframes av-hop{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-10px) scale(.94,1.06)}60%{transform:translateY(0) scale(1.06,.94)}100%{transform:translateY(0) scale(1,1)}}
+.bubble{flex:1; min-width:0; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center; transform-origin:0 0}
+.bubble.is-pop{animation:bub-pop .32s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes bub-pop{from{transform:scale(.94); opacity:.4}to{transform:scale(1); opacity:1}}
+@media (prefers-reduced-motion:reduce){ .avatar, .avatar .eye, .avatar.is-talking, .avatar.is-talking .mouth, .avatar.is-hop, .bubble.is-pop{animation:none} }
 .bubble p{margin:0; font-size:.9rem; line-height:1.55; color:var(--ink-2); flex:1}
 .mini-score{flex:none; position:relative; width:48px; height:48px}
 .mini-score svg{width:48px; height:48px; transform:rotate(-90deg)}
@@ -215,10 +232,9 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 .brief .b .ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none}
 .brief .b .ic svg{width:16px; height:16px}
 
-/* ---------- AIアシスタント ---------- */
-.ai-intro{display:flex; gap:10px; align-items:center; background:var(--tint); border-radius:18px; padding:12px 14px}
-.ai-intro p{margin:0; font-size:.85rem; color:var(--ink-2)}
-.ai-intro b{display:block; font-size:.8rem; color:var(--primary)}
+/* ---------- AIアシスタント（キャラクターの吹き出しに続く「見通し」と「相談」） ---------- */
+.ai-link{font-size:.8rem; color:var(--ink-3); margin:10px 2px 0}
+.ai-link a{color:var(--primary)}
 .ai-card{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:14px 16px; margin-top:12px}
 .ai-card .hd{display:flex; gap:10px; align-items:flex-start}
 .ai-card .hd .ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; flex:none}
@@ -262,12 +278,6 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 .info ol{margin:0; padding-left:20px} .info li{margin:4px 0}
 .info .meta{font-size:.76rem; color:var(--ink-3); margin-top:8px}
 .info a{color:var(--primary); word-break:break-all}
-
-/* ---------- タブバー ---------- */
-.tabbar{flex:none; display:flex; border-top:1px solid var(--line); background:var(--surface); padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
-.tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:.64rem; font-weight:600; color:var(--ink-3); background:none; border:0; padding:6px 0 2px; min-height:48px; border-radius:8px}
-.tab.is-on{color:var(--primary)}
-.tab svg{width:24px; height:24px}
 
 /* ---------- 詳細シート ---------- */
 .sheet{position:absolute; inset:0; background:var(--bg); display:flex; flex-direction:column; z-index:20; transform:translateY(100%); visibility:hidden; pointer-events:none;
@@ -339,7 +349,6 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
     <linearGradient id="av-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818CF8"/><stop offset="1" stop-color="#C4B5FD"/></linearGradient>
     <symbol id="i-mark" viewBox="0 0 24 24" fill="currentColor"><path d="M11 2.5c.3-.9 1.7-.9 2 0l1.6 5.1a2 2 0 0 0 1.3 1.3l5.1 1.6c.9.3.9 1.7 0 2l-5.1 1.6a2 2 0 0 0-1.3 1.3L13 20.5c-.3.9-1.7.9-2 0l-1.6-5.1a2 2 0 0 0-1.3-1.3L3 12.5c-.9-.3-.9-1.7 0-2l5.1-1.6a2 2 0 0 0 1.3-1.3z"/><path d="M19.5 15.5c.2-.5 1-.5 1.2 0l.5 1.4 1.4.5c.5.2.5 1 0 1.2l-1.4.5-.5 1.4c-.2.5-1 .5-1.2 0l-.5-1.4-1.4-.5c-.5-.2-.5-1 0-1.2l1.4-.5z" opacity=".8"/></symbol>
     <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z"/></symbol>
-    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></symbol>
     <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></symbol>
     <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
     <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol>
@@ -369,7 +378,6 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
     <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
     <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
     <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></symbol>
-    <symbol id="avatar" viewBox="0 0 44 44"><circle cx="22" cy="22" r="21" fill="url(#av-g)"/><ellipse cx="16" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><ellipse cx="28" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="16.9" cy="19.8" r=".9" fill="#fff"/><circle cx="28.9" cy="19.8" r=".9" fill="#fff"/></symbol>
   </defs>
 </svg>
 
@@ -384,13 +392,21 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 
   <main id="main">
     <div class="page" id="top">
-      <section class="greet" aria-label="今日のあいさつ">
+      <section class="greet" aria-label="今日のあいさつとAI秘書">
         <p class="eyebrow num" id="h-date">読み込み中</p>
         <h1 id="h-greet">こんにちは</h1>
         <div class="assistant">
-          <span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span>
+          <button class="avatar" id="h-avatar" type="button" data-act="avatar" aria-label="AI秘書 Sakiyomi" title="Sakiyomi">
+            <svg viewBox="0 0 44 44" aria-hidden="true">
+              <circle cx="22" cy="22" r="21" fill="url(#av-g)"/>
+              <g class="eye l"><ellipse cx="16" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="16.9" cy="19.8" r=".9" fill="#fff"/></g>
+              <g class="eye r"><ellipse cx="28" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="28.9" cy="19.8" r=".9" fill="#fff"/></g>
+              <path class="mouth" d="M18.8 28.4q3.2 2.6 6.4 0" fill="none" stroke="#1E1B4B" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </button>
           <div class="bubble" id="h-bubble"><p>予定を読み込んでいます…</p></div>
         </div>
+        <div id="h-ai"></div>
         <button class="status" id="h-status" type="button" data-state="loading" data-act="settings">
           <span class="dot"></span><span class="lbl">予定を読み込んでいます…</span><span class="when num"></span>
           <svg class="chev"><use href="#i-right"/></svg>
@@ -402,20 +418,8 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
         <div class="sec-h"><h2>予定と準備</h2><span class="range" id="tasks-note">カードの中でそのままチェックできます</span></div>
         <div id="h-tasks"></div>
       </section>
-
-      <section class="sec" id="sec-ai" aria-label="AIアシスタント">
-        <div class="sec-h"><h2>AIアシスタント</h2><span class="range" id="ai-note"></span></div>
-        <div id="h-ai"></div>
-      </section>
     </div>
   </main>
-
-  <nav class="tabbar" aria-label="ページ内の移動">
-    <button class="tab is-on" type="button" data-act="jump-to" data-target="top" aria-current="true"><svg><use href="#i-home"/></svg>ホーム</button>
-    <button class="tab" type="button" data-act="jump-to" data-target="sec-tasks"><svg><use href="#i-list"/></svg>予定</button>
-    <button class="tab" type="button" data-act="jump-to" data-target="sec-ai"><svg><use href="#i-spark"/></svg>AI</button>
-    <button class="tab" type="button" data-act="settings"><svg><use href="#i-gear"/></svg>設定</button>
-  </nav>
 
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-title" aria-hidden="true">
     <div class="sheet-bar">
@@ -802,10 +806,28 @@ function renderStatus(){
       ${offerDemo ? `<div class="actions"><button class="btn small" type="button" data-act="demo">サンプルの予定で試す</button></div>` : ""}</div>`;
   } else $("h-notice").innerHTML = "";
 }
+let SAID = "", talkT = null;
+function talk(){
+  const a = $("h-avatar"); if (!a) return;
+  a.classList.remove("is-thinking"); a.classList.add("is-talking");
+  clearTimeout(talkT); talkT = setTimeout(() => a.classList.remove("is-talking"), 1800);
+}
+function hop(){
+  const a = $("h-avatar"); if (!a) return;
+  a.classList.remove("is-hop"); void a.offsetWidth; a.classList.add("is-hop");
+  setTimeout(() => a.classList.remove("is-hop"), 650); talk();
+}
+function say(text){
+  const b = $("h-bubble"); if (text === SAID) return;
+  const first = !SAID; SAID = text;
+  b.innerHTML = `<p>${esc(text)}</p>`;
+  if (first) return;
+  b.classList.remove("is-pop"); void b.offsetWidth; b.classList.add("is-pop"); talk();
+}
 function renderGreeting(sm, now){
   $("h-date").textContent = jpDate(now);
   $("h-greet").innerHTML = greeting(now);
-  $("h-bubble").innerHTML = `<p>${esc(bubbleText(sm, now))}</p>`;
+  say(bubbleText(sm, now));
 }
 
 /* ---------- 描画：予定と準備の提案（要準備・確認のみの予定だけ。1ヶ月ぶん） ---------- */
@@ -858,16 +880,18 @@ function briefing(events, now){
   return out;
 }
 function renderAssistant(events, now){
-  const items = META.loading ? [] : briefing(events, now);
+  const ready = !META.loading && (META.ok || META.demo);
+  const items = ready ? briefing(events, now) : [];
   const askable = !!sampleFn;
-  $("ai-note").textContent = askable ? "見通しと相談" : "相談は claude.ai 版で使えます";
+  $("h-avatar").classList.toggle("is-thinking", !!(CHAT.busy && !CHAT.a));
+  const prev = $("ask-in"), keep = prev ? { v: prev.value, f: document.activeElement === prev, s: prev.selectionStart } : null;
   let chat = "";
   if (askable){
     const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
     chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…（例：来週の持ち物は？）" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
-  } else chat = `<p class="empty" style="padding:10px 2px 0">予定についてAIに相談するには、<a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">claude.ai 版</a>を開いてください。</p>`;
-  $("h-ai").innerHTML = `<div class="ai-intro"><span class="avatar" aria-hidden="true"><svg><use href="#avatar"/></svg></span><p><b>Sakiyomi</b>1ヶ月先までの見通しをまとめました。</p></div>
-    ${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : `<div class="card" style="margin-top:12px"><p class="empty">読み込み中…</p></div>`}${chat}`;
+  } else chat = ready ? `<p class="ai-link">予定についてAIに相談するには <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> を開いてください。</p>` : "";
+  $("h-ai").innerHTML = `${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : ""}${chat}`;
+  if (keep && !CHAT.busy){ const inp = $("ask-in"); if (inp){ inp.value = keep.v; if (keep.f){ inp.focus(); try{ inp.setSelectionRange(keep.s, keep.s); }catch(_){} } } }
 }
 async function askAssistant(q){
   if (!sampleFn || CHAT.busy || !q) return;
@@ -887,14 +911,14 @@ ${ctx || "（予定はありません）"}
 
 条件: 予定に基づいて具体的に。250字以内、箇条書き可。わからないことは推測せず「予定からは分かりません」と言う。`;
   try{
-    const res = await sampleFn(prompt, { modelTier:"quick", onText: ({ text }) => { CHAT.a = text; const el = document.querySelector("#h-ai .answer"); if (el) el.innerHTML = `<p class="q">Q. ${esc(CHAT.q)}</p>${esc(text)}`; } });
+    const res = await sampleFn(prompt, { modelTier:"quick", onText: ({ text }) => { CHAT.a = text; talk(); const el = document.querySelector("#h-ai .answer"); if (el) el.innerHTML = `<p class="q">Q. ${esc(CHAT.q)}</p>${esc(text)}`; } });
     CHAT = { busy:false, q, a:res.text, err: res.truncated ? "（長くなったので途中までです）" : null };
   }catch(e){
     const c = e && e.code;
     if (["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(c)){ sampleFn = null; CHAT = { busy:false, q:"", a:"", err:null }; }
     else CHAT = { busy:false, q, a: (e && e.text) || "", err: c === "rate_limited" ? "混み合っています。少し待ってからもう一度お試しください。" : c === "cancelled" ? "中止しました。" : "答えを受け取れませんでした。しばらくしてからお試しください。" };
   }
-  renderHome();
+  renderHome(); talk();
 }
 
 /* ---------- 描画：ホーム全体 ---------- */
@@ -941,27 +965,27 @@ function openDetail(id){
   if (AI.forId !== id) AI = { busy:false, list:null, err:null, forId:id };
   renderDetail();
   const sh = $("sheet"); sh.classList.add("is-open"); sh.setAttribute("aria-hidden", "false");
-  $("main").inert = true; document.querySelector(".tabbar").inert = true; document.querySelector(".hdr").inert = true;
+  $("main").inert = true; document.querySelector(".hdr").inert = true;
   $("sh-body").scrollTop = 0;
   setTimeout(() => $("sh-back").focus(), 50);
 }
 function openSettings(){
   renderSettings();
   const sh = $("settings-sheet"); sh.classList.add("is-open"); sh.setAttribute("aria-hidden", "false");
-  $("main").inert = true; document.querySelector(".tabbar").inert = true; document.querySelector(".hdr").inert = true;
+  $("main").inert = true; document.querySelector(".hdr").inert = true;
   $("st-body").scrollTop = 0; setTimeout(() => $("st-back").focus(), 50);
 }
 function closeSettings(){
   const sh = $("settings-sheet"); sh.classList.remove("is-open"); sh.setAttribute("aria-hidden", "true");
-  $("main").inert = false; document.querySelector(".tabbar").inert = false; document.querySelector(".hdr").inert = false;
-  renderHome(); const b = document.querySelector(".tab.is-on"); if (b) b.focus();
+  $("main").inert = false; document.querySelector(".hdr").inert = false;
+  renderHome(); const b = document.querySelector('.hdr [data-act="settings"]'); if (b) b.focus();
 }
 function closeDetail(){
   const sh = $("sheet"); sh.classList.remove("is-open"); sh.setAttribute("aria-hidden", "true");
-  $("main").inert = false; document.querySelector(".tabbar").inert = false; document.querySelector(".hdr").inert = false;
+  $("main").inert = false; document.querySelector(".hdr").inert = false;
   const id = DETAIL; DETAIL = null;
   renderHome();
-  const back = document.querySelector(`[data-act="open"][data-id="${CSS.escape(id || "")}"]`) || document.querySelector(".tab.is-on");
+  const back = document.querySelector(`[data-act="open"][data-id="${CSS.escape(id || "")}"]`) || document.querySelector('.hdr [data-act="settings"]');
   if (back) back.focus();
 }
 function linkify(text){
@@ -1041,34 +1065,13 @@ ${items}
   if (DETAIL === ev.id) renderDetail();
 }
 
-/* ---------- ページ内の移動と描画のまとめ ---------- */
+/* ---------- 描画のまとめ ---------- */
 function renderAll(){ renderHome(); if (DETAIL) renderDetail(); }
-const SPY = ["top","sec-tasks","sec-ai"];
-const smooth = () => (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
-function setActiveTab(id){
-  document.querySelectorAll(".tab").forEach(b => { const on = b.dataset.target === id; b.classList.toggle("is-on", on); if (on) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current"); });
-}
-function scrollMainTo(el, offset){ $("main").scrollTo({ top: Math.max(0, el.offsetTop - (offset || 8)), behavior: smooth() }); }
-function jumpTo(id){
-  if (id === "top"){ $("main").scrollTo({ top:0, behavior: smooth() }); setActiveTab("top"); return; }
-  const el = document.getElementById(id); if (!el) return;
-  scrollMainTo(el, 8); setActiveTab(id);
-}
-let spyTick = false;
-$("main").addEventListener("scroll", () => {
-  if (spyTick) return; spyTick = true;
-  requestAnimationFrame(() => {
-    spyTick = false;
-    const y = $("main").scrollTop + 160; let cur = "top";
-    for (const id of SPY){ const el = document.getElementById(id); if (el && el.offsetTop <= y) cur = id; }
-    setActiveTab(cur);
-  });
-}, { passive:true });
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const act = el.dataset.act;
-  if (act === "jump-to"){ jumpTo(el.dataset.target); return; }
+  if (act === "avatar"){ hop(); return; }
   if (act === "open"){ openDetail(el.dataset.id); return; }
   if (act === "close"){ closeDetail(); return; }
   if (act === "settings"){ openSettings(); return; }
