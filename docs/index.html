@@ -75,7 +75,7 @@ button{cursor:pointer}
 .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 
 .app{height:100vh; height:100dvh; display:flex; flex-direction:column; max-width:520px; margin:0 auto; position:relative; background:var(--bg); overflow:hidden}
-.hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px}
+.hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px; background:var(--tint)}
 .brand{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--ink); font-size:1.05rem}
 .brand svg{width:26px; height:26px; color:var(--accent)}
 .hdr-actions{display:flex; gap:8px}
@@ -86,11 +86,12 @@ button{cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .icon-btn.is-spin svg{animation:none} }
 main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
-.page{padding:6px 18px calc(40px + env(safe-area-inset-bottom))}
+.page{padding:0 18px calc(40px + env(safe-area-inset-bottom))}
+.greet{margin:0 -18px; padding:2px 18px 18px; background:var(--tint); border-bottom:1px solid var(--line); border-radius:0 0 24px 24px}
 
 /* ---------- あいさつ・AI秘書 ---------- */
 .eyebrow{font-size:.78rem; color:var(--ink-3); font-weight:500; margin:0}
-.greet h1{font-size:1.5rem; line-height:1.35; font-weight:700; letter-spacing:-.01em; margin:2px 0 12px; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.greet h1{font-size:1.5rem; line-height:1.35; font-weight:700; letter-spacing:-.01em; margin:2px 0 14px; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
 .greet h1 .wx{width:26px; height:26px; color:var(--amber-soft)}
 .assistant{display:flex; gap:12px; align-items:flex-start}
 .avatar{width:56px; height:56px; flex:none; border-radius:50%; border:0; padding:0; background:none; display:block; position:relative; box-shadow:0 8px 20px rgba(99,102,241,.28); transform-origin:50% 100%; animation:av-float 3.6s ease-in-out infinite}
@@ -109,7 +110,7 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 @keyframes av-talk{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-2px) rotate(-4deg)}75%{transform:translateY(-2px) rotate(4deg)}}
 @keyframes av-mouth{from{transform:scaleY(.5)}to{transform:scaleY(1.35) scaleX(.9)}}
 @keyframes av-hop{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-10px) scale(.94,1.06)}60%{transform:translateY(0) scale(1.06,.94)}100%{transform:translateY(0) scale(1,1)}}
-.bubble{flex:1; min-width:0; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center; transform-origin:0 0}
+.bubble{flex:1; min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center; transform-origin:0 0}
 .bubble.is-pop{animation:bub-pop .32s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes bub-pop{from{transform:scale(.94); opacity:.4}to{transform:scale(1); opacity:1}}
 @media (prefers-reduced-motion:reduce){ .avatar, .avatar .eye, .avatar.is-talking, .avatar.is-talking .mouth, .avatar.is-hop, .bubble.is-pop{animation:none} }
@@ -122,13 +123,15 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .mini-score[data-tone="warn"] .bar{stroke:var(--amber-soft)}
 .mini-score[data-tone="good"] .bar{stroke:var(--teal-soft)}
 .mini-score b{position:absolute; inset:0; display:grid; place-items:center; font-size:.72rem; font-weight:700; color:var(--ink)}
-.status{display:inline-flex; align-items:center; gap:8px; font-size:.8rem; color:var(--ink-3); background:none; border:0; padding:10px 0 0; text-align:left}
+.status{display:flex; width:100%; align-items:center; gap:8px; font-size:.78rem; color:var(--ink-3); background:none; border:0; padding:6px 0 12px; text-align:left}
+.status .lbl{font-weight:600}
+.status .when{margin-left:auto}
 .status .dot{width:8px; height:8px; border-radius:50%; background:var(--teal-soft); flex:none}
 .status[data-state="demo"] .dot{background:var(--amber-soft)}
 .status[data-state="error"] .dot{background:var(--rose-soft)}
 .status[data-state="loading"] .dot{background:var(--hair)}
 .status .chev{width:14px; height:14px}
-.notice{border-radius:16px; padding:14px 16px; margin:12px 0 0; font-size:.9rem; background:var(--surface); box-shadow:var(--shadow); border:1px solid transparent}
+.notice{border-radius:16px; padding:14px 16px; margin:0 0 14px; font-size:.9rem; background:var(--surface); box-shadow:var(--shadow); border:1px solid transparent}
 .notice.err{border-color:var(--rose-soft); background:var(--rose-bg)}
 .notice.warn{border-color:var(--amber-soft); background:var(--amber-bg)}
 .notice h3{font-size:.95rem; display:flex; align-items:center; gap:8px; margin:0 0 4px}
@@ -146,11 +149,12 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .tile.is-on .lbl{color:var(--primary-ink); opacity:.85}
 
 /* ---------- セクション共通 ---------- */
-.sec{margin-top:26px}
-.sec-h{display:flex; align-items:baseline; gap:10px; margin-bottom:10px}
-.sec-h h2{font-size:1.1rem; font-weight:700}
+.sec{margin-top:22px}
+.sec-h{display:flex; align-items:baseline; gap:10px; margin-bottom:6px}
+.sec-h h2{font-size:1.2rem; font-weight:700; display:flex; align-items:center; gap:10px}
+.sec-h h2::before{content:""; width:4px; height:1.05em; border-radius:2px; background:var(--primary); flex:none}
 .sec-h .range{font-size:.75rem; color:var(--ink-3); flex:1; min-width:0}
-.card{background:var(--surface); border-radius:18px; box-shadow:var(--shadow)}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow)}
 .empty{color:var(--ink-3); font-size:.9rem; margin:0; padding:14px 16px}
 
 .badge{font-size:.7rem; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; line-height:1.3}
@@ -177,8 +181,9 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .frow > svg.chev{width:18px; height:18px; color:var(--hair); align-self:center; flex:none}
 
 /* ---------- 要準備のタスク ---------- */
-.task{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden}
-.task-h{display:flex; gap:12px; align-items:center; width:100%; text-align:left; background:none; border:0; padding:14px 14px 8px; color:inherit}
+.task{background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden}
+.task.is-going{opacity:.25; transition:opacity .2s}
+.task-h{display:flex; gap:12px; align-items:center; width:100%; text-align:left; background:none; border:0; border-bottom:1px solid var(--line); padding:14px 14px 12px; color:inherit}
 .due{flex:none; font-size:.7rem; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-2)}
 .due.soon{background:var(--rose-bg); color:var(--rose)}
 .cl{padding:0 14px 12px}
@@ -194,7 +199,7 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .seg button[aria-pressed="true"]{background:var(--primary); color:var(--primary-ink)}
 
 /* ---------- 提案の一覧 ---------- */
-.sug{list-style:none; margin:0; padding:0 14px 10px}
+.sug{list-style:none; margin:0; padding:2px 14px 0}
 .sug li{display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-top:1px solid var(--line)}
 .sug li:first-child{border-top:0}
 .sug .ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none}
@@ -206,17 +211,19 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .sug .tx{flex:1; min-width:0}
 .sug input{width:22px; height:22px; accent-color:var(--primary); margin:0; flex:none}
 .sug li.is-going{opacity:.25; transition:opacity .2s}
-.sug-foot{display:flex; justify-content:space-between; align-items:center; padding:2px 14px 10px; font-size:.78rem; color:var(--ink-3)}
+.sug-foot{display:flex; align-items:center; gap:4px; padding:8px 10px 10px 14px; border-top:1px solid var(--line); margin-top:8px; font-size:.78rem; color:var(--ink-3)}
 .sug-foot button{background:none; border:0; color:var(--primary); font-weight:600; font-size:.8rem; padding:6px 8px; min-height:32px}
-.finished .rrow .btn{margin-left:auto}
-.finished .rrow span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sug-foot .all{margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:var(--blue-bg); color:var(--blue); border-radius:999px; padding:0 14px; min-height:36px; font-weight:700}
+.sug-foot .all svg{width:14px; height:14px}
 .tile .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; background:var(--hair)}
 .tile .dot.prep{background:var(--rose-soft)} .tile .dot.check{background:var(--amber-soft)}
 
 /* ---------- 週の見出し・ヒント ---------- */
-.wk-h{display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; font-size:.82rem; font-weight:700; color:var(--ink-2)}
-.wk-h span{font-weight:500; color:var(--ink-3); font-size:.75rem}
-.hint{display:flex; gap:6px; align-items:flex-start; margin:0 14px 10px; padding:8px 10px; border-radius:10px; background:var(--violet-bg); color:var(--ink-2); font-size:.8rem; line-height:1.45}
+.wk-h{display:flex; align-items:center; gap:10px; margin:22px 0 10px; font-size:.8rem}
+.wk-h .tag{background:var(--primary); color:var(--primary-ink); font-weight:700; font-size:.74rem; padding:3px 11px; border-radius:999px; letter-spacing:.02em}
+.wk-h .num{font-weight:500; color:var(--ink-3); font-size:.75rem}
+.wk-h::after{content:""; flex:1; height:1px; background:var(--line-2)}
+.hint{display:flex; gap:6px; align-items:flex-start; margin:10px 14px 0; padding:8px 10px; border-radius:10px; background:var(--violet-bg); color:var(--ink-2); font-size:.8rem; line-height:1.45}
 .hint svg{width:15px; height:15px; flex:none; color:var(--violet); margin-top:2px}
 .routine-box{background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:0 14px; margin-bottom:12px}
 details.routine > summary{list-style:none; display:flex; align-items:center; gap:10px; padding:12px 0; cursor:pointer; font-size:.85rem; color:var(--ink-2)}
@@ -226,15 +233,13 @@ details.routine > summary svg{width:16px; height:16px; color:var(--hair); transi
 details.routine[open] > summary svg{transform:rotate(90deg)}
 details.routine .rrow{display:flex; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:.85rem; color:var(--ink-2)}
 details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none}
-.brief{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:6px 16px; margin-top:12px}
+.brief{background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); padding:6px 16px; margin-top:14px}
 .brief .b{display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--line); font-size:.88rem; color:var(--ink-2); line-height:1.5}
 .brief .b:first-child{border-top:0}
 .brief .b .ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:none}
 .brief .b .ic svg{width:16px; height:16px}
 
 /* ---------- AIアシスタント（キャラクターの吹き出しに続く「見通し」と「相談」） ---------- */
-.ai-link{font-size:.8rem; color:var(--ink-3); margin:10px 2px 0}
-.ai-link a{color:var(--primary)}
 .ai-card{background:var(--surface); border-radius:18px; box-shadow:var(--shadow); padding:14px 16px; margin-top:12px}
 .ai-card .hd{display:flex; gap:10px; align-items:flex-start}
 .ai-card .hd .ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; flex:none}
@@ -254,7 +259,7 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 .ask .send{width:46px; height:46px; border-radius:50%; border:0; background:var(--primary); color:var(--primary-ink); display:grid; place-items:center; flex:none}
 .ask .send svg{width:20px; height:20px}
 .ask .send[disabled]{opacity:.5}
-.answer{margin-top:10px; background:var(--surface); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); font-size:.9rem; white-space:pre-wrap; word-break:break-word; color:var(--ink-2)}
+.answer{margin-top:10px; background:var(--surface); border:1px solid var(--line); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); font-size:.9rem; white-space:pre-wrap; word-break:break-word; color:var(--ink-2)}
 .answer .q{font-size:.78rem; color:var(--ink-3); margin:0 0 6px; white-space:normal}
 .answer .note{font-size:.78rem; color:var(--ink-3); margin-top:6px; white-space:normal}
 
@@ -338,10 +343,12 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
 .kv li b{width:72px; flex:none; color:var(--ink-3); font-weight:600; font-size:.82rem; padding-top:2px}
 .kv li span{flex:1; min-width:0; word-break:break-word}
 
-.toast{position:absolute; left:50%; bottom:calc(76px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
+.toast{position:absolute; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
        background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:18px; font-size:.85rem; font-weight:600;
        opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:30; width:max-content; max-width:calc(100% - 32px); text-align:center; line-height:1.4}
 .toast.is-on{opacity:1; transform:translateX(-50%)}
+.toast.has-act{pointer-events:auto}
+.toast button{background:none; border:0; color:inherit; font:inherit; font-weight:700; text-decoration:underline; text-underline-offset:3px; margin-left:10px; padding:4px 2px; min-height:32px}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -393,6 +400,11 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
   <main id="main">
     <div class="page" id="top">
       <section class="greet" aria-label="今日のあいさつとAI秘書">
+        <button class="status" id="h-status" type="button" data-state="loading" data-act="settings">
+          <span class="dot"></span><span class="lbl">予定を読み込んでいます…</span><span class="when num"></span>
+          <svg class="chev"><use href="#i-right"/></svg>
+        </button>
+        <div id="h-notice"></div>
         <p class="eyebrow num" id="h-date">読み込み中</p>
         <h1 id="h-greet">こんにちは</h1>
         <div class="assistant">
@@ -407,11 +419,6 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
           <div class="bubble" id="h-bubble"><p>予定を読み込んでいます…</p></div>
         </div>
         <div id="h-ai"></div>
-        <button class="status" id="h-status" type="button" data-state="loading" data-act="settings">
-          <span class="dot"></span><span class="lbl">予定を読み込んでいます…</span><span class="when num"></span>
-          <svg class="chev"><use href="#i-right"/></svg>
-        </button>
-        <div id="h-notice"></div>
       </section>
 
       <section class="sec" id="sec-tasks" aria-label="予定と準備">
@@ -493,7 +500,12 @@ function hit(hay, words){ const h = (hay || "").toLowerCase(); return words.some
 function durText(ms){ const m = Math.round(ms/MIN); const h = Math.floor(m/60), r = m%60; return h ? (r ? `${h}時間${r}分` : `${h}時間`) : `${r}分`; }
 function dayClass(d, hol){ return hol ? "is-hol" : d.getDay() === 0 ? "is-sun" : d.getDay() === 6 ? "is-sat" : ""; }
 function tz(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Tokyo"; }catch(e){ return "Asia/Tokyo"; } }
-function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("is-on"); clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("is-on"), 1800); }
+function toast(msg, undoId){
+  const t = $("toast");
+  t.innerHTML = esc(msg) + (undoId ? `<button type="button" data-act="undo" data-id="${esc(undoId)}">戻す</button>` : "");
+  t.classList.toggle("has-act", !!undoId); t.classList.add("is-on");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("is-on"), undoId ? 5000 : 1800);
+}
 function weekLabel(w){ return w === 0 ? "今週" : `${w}週間先`; }
 
 /* ---------- 準備のルール ----------
@@ -707,6 +719,10 @@ function doneCount(ev){ const d = doneMap(ev); return itemsOf(ev).filter(it => d
 function isFinished(ev){ return itemsOf(ev).length > 0 && pendingItems(ev).length === 0; }
 function markDone(ev, itemId, on){ const d = doneMap(ev); if (on) d[itemId] = true; else delete d[itemId]; if (Object.keys(d).length) store.set(`done:${ev.id}`, d); else store.del(`done:${ev.id}`); }
 function resetDone(ev){ store.del(`done:${ev.id}`); }
+function completeAll(ev, cardEl){
+  const finish = () => { for (const it of pendingItems(ev)) markDone(ev, it.id, true); renderAll(); toast(`「${ev.title}」の準備をすべて済みにしました`, ev.id); };
+  if (cardEl && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){ cardEl.classList.add("is-going"); setTimeout(finish, 220); } else finish();
+}
 
 /* ---------- 状態 ---------- */
 let EV = [];                                  // 正規化・分類済みの予定
@@ -779,7 +795,7 @@ function greeting(now){
 }
 function bubbleText(sm, now){
   if (META.loading) return "予定を読み込んでいます。少しお待ちください。";
-  if (!META.ok && !META.demo) return "まだ予定を読み込めていません。下の案内を確認してください。";
+  if (!META.ok && !META.demo) return "まだ予定を読み込めていません。上の案内を確認してください。";
   if (!sm.main.length) return sm.finished.length ? "この1ヶ月の準備はすべて済んでいます。おつかれさまです。" : "この1ヶ月、特別な準備がいる予定はありません。ゆっくり過ごせそうです。";
   if (sm.urgent) return `${relDay(bucketDay(sm.urgent, now))}の「${sm.urgent.title}」に向けて、そろそろ準備を始めましょう。`;
   if (sm.weekPrep.length) return `今週は準備がいる予定が${sm.weekPrep.length}件あります。早めに手をつけると、余裕のある一週間になります。`;
@@ -836,7 +852,7 @@ function sugList(ev, max){
   const rows = shown.map((it, i) => { const k = KIND[it.kind] || KIND.check, cid = `d-${esc(ev.id)}-${i}`;
     return `<li><label class="sgrow" for="${cid}"><span class="ic" data-tone="${k.tone}" aria-hidden="true"><svg><use href="#${k.icon}"/></svg></span><span class="tx"><b>${esc(it.title)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ""}</span><input type="checkbox" id="${cid}" data-act="done" data-ev="${esc(ev.id)}" data-item="${esc(it.id)}" aria-label="${esc(it.title)} を済みにする"></label></li>`; }).join("");
   const more = max && items.length > max ? `<li class="mo"><button class="more" type="button" data-act="open" data-id="${esc(ev.id)}">他${items.length - max}件の提案を見る<svg><use href="#i-right"/></svg></button></li>` : "";
-  const foot = done ? `<div class="sug-foot"><span>済み ${done}件</span><button type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>` : "";
+  const foot = items.length ? `<div class="sug-foot">${done ? `<span>済み ${done}件</span><button type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button>` : ""}<button class="all" type="button" data-act="done-all" data-id="${esc(ev.id)}"><svg><use href="#i-check"/></svg>すべて完了</button></div>` : "";
   return `<ul class="sug">${rows}${more}</ul>${foot}`;
 }
 function sugCard(ev, now){
@@ -857,9 +873,8 @@ function renderTasks(sm, now){
   groups.forEach((g, w) => {
     if (!g.length) return;
     const from = addDays(today, w * 7), to = w < 3 ? addDays(from, 6) : addDays(today, DAYS - 1);
-    html += `<div class="wk-h">${weekName(w)}<span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>` + g.map(ev => sugCard(ev, now)).join("");
+    html += `<div class="wk-h"><span class="tag">${weekName(w)}</span><span class="num">${md(from)}（${WD[from.getDay()]}）– ${md(to)}（${WD[to.getDay()]}）</span></div>` + g.map(ev => sugCard(ev, now)).join("");
   });
-  if (sm.finished.length) html += `<div class="routine-box finished"><details class="routine"><summary><span class="n">準備が完了した予定 ${sm.finished.length}件</span><span class="badge done">完了</span><svg><use href="#i-right"/></svg></summary>${sm.finished.map(ev => `<div class="rrow"><b class="num">${md(ev.start)}（${WD[ev.start.getDay()]}）</b><span>${esc(ev.title)}</span><button class="btn small" type="button" data-act="undo" data-id="${esc(ev.id)}">戻す</button></div>`).join("")}</details></div>`;
   $("tasks-note").textContent = sm.main.length ? `1ヶ月で${sm.main.length}件。チェックすると消えます` : "";
   $("h-tasks").innerHTML = html || `<div class="card"><p class="empty">${META.loading ? "読み込み中…" : sm.finished.length ? "この1ヶ月の準備はすべて済みました。" : "この1ヶ月、準備がいる予定はありません。"}</p></div>`;
 }
@@ -889,7 +904,7 @@ function renderAssistant(events, now){
   if (askable){
     const out = CHAT.q ? `<div class="answer"><p class="q">Q. ${esc(CHAT.q)}</p>${CHAT.busy && !CHAT.a ? "考え中…（数秒かかります）" : esc(CHAT.a)}${CHAT.err ? `<p class="note">${esc(CHAT.err)}</p>` : ""}</div>` : "";
     chat = `<form class="ask" id="ask-form" data-act="ask-form"><label class="sr" for="ask-in">質問や相談</label><input type="text" id="ask-in" placeholder="質問や相談を入力…（例：来週の持ち物は？）" autocomplete="off" enterkeyhint="send"${CHAT.busy ? " disabled" : ""}><button class="send" type="submit" aria-label="送信"${CHAT.busy ? " disabled" : ""}><svg><use href="#i-up"/></svg></button></form>${out}`;
-  } else chat = ready ? `<p class="ai-link">予定についてAIに相談するには <a href="${CLAUDE_URL}" target="_blank" rel="noopener noreferrer">claude.ai 版</a> を開いてください。</p>` : "";
+  }
   $("h-ai").innerHTML = `${items.length ? `<div class="brief">${items.map(b => `<div class="b"><span class="ic" data-tone="${b.tone}"><svg><use href="#${b.icon}"/></svg></span><span>${esc(b.text)}</span></div>`).join("")}</div>` : ""}${chat}`;
   if (keep && !CHAT.busy){ const inp = $("ask-in"); if (inp){ inp.value = keep.v; if (keep.f){ inp.focus(); try{ inp.setSelectionRange(keep.s, keep.s); }catch(_){} } } }
 }
@@ -1081,6 +1096,7 @@ document.addEventListener("click", (e) => {
   const ev = DETAIL && byId(DETAIL);
   if (act === "undo"){ const t = byId(el.dataset.id); if (t){ resetDone(t); renderAll(); toast("戻しました"); } return; }
   if (act === "undo-all"){ store.keys("done:").forEach(k => store.del(k)); renderAll(); toast("すべて戻しました"); return; }
+  if (act === "done-all"){ const t = byId(el.dataset.id); if (t) completeAll(t, el.closest(".task")); return; }
   if (!ev) return;
   if (act === "ai"){ askAI(ev); return; }
 });
