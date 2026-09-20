@@ -75,7 +75,7 @@ button{cursor:pointer}
 .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 
 .app{height:100vh; height:100dvh; display:flex; flex-direction:column; max-width:520px; margin:0 auto; position:relative; background:var(--bg); overflow:hidden}
-.hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px; background:var(--tint)}
+.hdr{flex:none; display:flex; align-items:center; justify-content:space-between; padding:calc(10px + env(safe-area-inset-top)) 18px 6px}
 .brand{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--ink); font-size:1.05rem}
 .brand svg{width:26px; height:26px; color:var(--accent)}
 .hdr-actions{display:flex; gap:8px}
@@ -87,7 +87,7 @@ button{cursor:pointer}
 @media (prefers-reduced-motion:reduce){ .icon-btn.is-spin svg{animation:none} }
 main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
 .page{padding:0 18px calc(40px + env(safe-area-inset-bottom))}
-.greet{margin:0 -18px; padding:2px 18px 18px; background:var(--tint); border-bottom:1px solid var(--line); border-radius:0 0 24px 24px}
+.greet{margin:2px 0 0; padding:12px 16px 16px; background:var(--tint); border:1px solid var(--line); border-radius:22px}
 
 /* ---------- あいさつ・AI秘書 ---------- */
 .eyebrow{font-size:.78rem; color:var(--ink-3); font-weight:500; margin:0}
@@ -96,24 +96,32 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .assistant{display:flex; gap:12px; align-items:flex-start}
 .avatar{width:56px; height:56px; flex:none; border-radius:50%; border:0; padding:0; background:none; display:block; position:relative; box-shadow:0 8px 20px rgba(99,102,241,.28); transform-origin:50% 100%; animation:av-float 3.6s ease-in-out infinite}
 .avatar:focus-visible{border-radius:50%}
-.avatar svg{width:56px; height:56px; display:block; overflow:visible}
-.avatar .eye{transform-box:fill-box; transform-origin:center; animation:av-blink 4.6s ease-in-out infinite}
-.avatar .eye.r{animation-delay:.06s}
-.avatar .mouth{transform-box:fill-box; transform-origin:center; transition:transform .25s, opacity .25s}
+.avatar .av-sway{display:block; animation:av-sway 5.7s ease-in-out infinite}
+.avatar svg{width:56px; height:56px; display:block; overflow:visible; transform:rotate(var(--tilt,0deg)); transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.avatar .eye{transform-box:fill-box; transform-origin:center; transition:transform .12s ease}
+.avatar .eye.l{transform:translate(var(--ex,0px),var(--ey,0px)) scaleY(var(--esl,1))}
+.avatar .eye.r{transform:translate(var(--ex,0px),var(--ey,0px)) scaleY(var(--esr,1))}
+.avatar .mouth{transform-box:fill-box; transform-origin:center; transform:scale(var(--mx,1),var(--my,1)); transition:transform .25s ease}
 .avatar.is-talking{animation:av-talk .9s ease-in-out 2}
+.avatar.is-talking[data-talk="nod"]{animation:av-nod .55s ease-in-out 3}
+.avatar.is-talking[data-talk="bob"]{animation:av-bob .45s ease-in-out 4}
 .avatar.is-talking .mouth{animation:av-mouth .28s ease-in-out infinite alternate}
-.avatar.is-thinking .eye{animation:none; transform:translate(1.3px,-1.5px)}
-.avatar.is-thinking .mouth{transform:scale(.55) translateY(1px)}
+.avatar.is-nod{animation:av-nod .5s ease-in-out 1}
 .avatar.is-hop{animation:av-hop .6s cubic-bezier(.3,1.4,.5,1)}
 @keyframes av-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes av-blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+@keyframes av-sway{0%,100%{transform:rotate(-1.5deg) translateX(-.4px)}50%{transform:rotate(1.5deg) translateX(.4px)}}
 @keyframes av-talk{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-2px) rotate(-4deg)}75%{transform:translateY(-2px) rotate(4deg)}}
+@keyframes av-nod{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(3px) rotate(4deg)}}
+@keyframes av-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes av-mouth{from{transform:scaleY(.5)}to{transform:scaleY(1.35) scaleX(.9)}}
 @keyframes av-hop{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-10px) scale(.94,1.06)}60%{transform:translateY(0) scale(1.06,.94)}100%{transform:translateY(0) scale(1,1)}}
 .bubble{flex:1; min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:4px 18px 18px 18px; padding:12px 14px; box-shadow:var(--shadow); display:flex; gap:12px; align-items:center; transform-origin:0 0}
 .bubble.is-pop{animation:bub-pop .32s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes bub-pop{from{transform:scale(.94); opacity:.4}to{transform:scale(1); opacity:1}}
-@media (prefers-reduced-motion:reduce){ .avatar, .avatar .eye, .avatar.is-talking, .avatar.is-talking .mouth, .avatar.is-hop, .bubble.is-pop{animation:none} }
+@media (prefers-reduced-motion:reduce){
+  .avatar, .avatar .av-sway, .avatar.is-talking, .avatar.is-talking .mouth, .avatar.is-nod, .avatar.is-hop, .bubble.is-pop{animation:none}
+  .avatar svg, .avatar .eye, .avatar .mouth{transition:none}
+}
 .bubble p{margin:0; font-size:.9rem; line-height:1.55; color:var(--ink-2); flex:1}
 .mini-score{flex:none; position:relative; width:48px; height:48px}
 .mini-score svg{width:48px; height:48px; transform:rotate(-90deg)}
@@ -409,12 +417,12 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
         <h1 id="h-greet">こんにちは</h1>
         <div class="assistant">
           <button class="avatar" id="h-avatar" type="button" data-act="avatar" aria-label="AI秘書 Sakiyomi" title="Sakiyomi">
-            <svg viewBox="0 0 44 44" aria-hidden="true">
+            <span class="av-sway"><svg viewBox="0 0 44 44" aria-hidden="true">
               <circle cx="22" cy="22" r="21" fill="url(#av-g)"/>
               <g class="eye l"><ellipse cx="16" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="16.9" cy="19.8" r=".9" fill="#fff"/></g>
               <g class="eye r"><ellipse cx="28" cy="21" rx="2.3" ry="3.2" fill="#1E1B4B"/><circle cx="28.9" cy="19.8" r=".9" fill="#fff"/></g>
               <path class="mouth" d="M18.8 28.4q3.2 2.6 6.4 0" fill="none" stroke="#1E1B4B" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
+            </svg></span>
           </button>
           <div class="bubble" id="h-bubble"><p>予定を読み込んでいます…</p></div>
         </div>
@@ -720,7 +728,7 @@ function isFinished(ev){ return itemsOf(ev).length > 0 && pendingItems(ev).lengt
 function markDone(ev, itemId, on){ const d = doneMap(ev); if (on) d[itemId] = true; else delete d[itemId]; if (Object.keys(d).length) store.set(`done:${ev.id}`, d); else store.del(`done:${ev.id}`); }
 function resetDone(ev){ store.del(`done:${ev.id}`); }
 function completeAll(ev, cardEl){
-  const finish = () => { for (const it of pendingItems(ev)) markDone(ev, it.id, true); renderAll(); toast(`「${ev.title}」の準備をすべて済みにしました`, ev.id); };
+  const finish = () => { for (const it of pendingItems(ev)) markDone(ev, it.id, true); renderAll(); react("cheer"); toast(`「${ev.title}」の準備をすべて済みにしました`, ev.id); };
   if (cardEl && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){ cardEl.classList.add("is-going"); setTimeout(finish, 220); } else finish();
 }
 
@@ -822,16 +830,77 @@ function renderStatus(){
       ${offerDemo ? `<div class="actions"><button class="btn small" type="button" data-act="demo">サンプルの予定で試す</button></div>` : ""}</div>`;
   } else $("h-notice").innerHTML = "";
 }
+/* ---------- キャラクターのふるまい（目・口・首は CSS 変数で動かし、JS がランダムに選ぶ） ---------- */
+const AV = { el:null, t:null, lookT:null, busy:false, thinking:false, reduce:false };
 let SAID = "", talkT = null;
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+const rnd = (a, b) => a + Math.random() * (b - a);
+function avVar(k, v){ if (AV.el) AV.el.style.setProperty(k, v); }
+function look(x, y){ avVar("--ex", `${x}px`); avVar("--ey", `${y}px`); }
+function eyes(l, r){ avVar("--esl", l); avVar("--esr", r == null ? l : r); }
+function mouth(x, y){ avVar("--mx", x); avVar("--my", y == null ? x : y); }
+function tilt(d){ avVar("--tilt", `${d}deg`); }
+async function blink(n){ for (let i = 0; i < (n || 1); i++){ eyes(.08); await wait(90); eyes(1); if (n > 1) await wait(150); } }
+function avThinking(on){
+  if (!AV.el) return;
+  AV.el.classList.toggle("is-thinking", on);
+  if (on && !AV.thinking){ look(1.3, -1.5); mouth(.6); }
+  else if (!on && AV.thinking){ look(0, 0); mouth(1); }
+  AV.thinking = on;
+}
 function talk(){
-  const a = $("h-avatar"); if (!a) return;
-  a.classList.remove("is-thinking"); a.classList.add("is-talking");
+  const a = AV.el; if (!a) return;
+  avThinking(false);
+  if (!a.classList.contains("is-talking")){ a.dataset.talk = ["wobble", "nod", "bob"][Math.floor(Math.random() * 3)]; a.classList.add("is-talking"); }
   clearTimeout(talkT); talkT = setTimeout(() => a.classList.remove("is-talking"), 1800);
 }
 function hop(){
-  const a = $("h-avatar"); if (!a) return;
+  const a = AV.el; if (!a || AV.reduce) return;
   a.classList.remove("is-hop"); void a.offsetWidth; a.classList.add("is-hop");
-  setTimeout(() => a.classList.remove("is-hop"), 650); talk();
+  setTimeout(() => a.classList.remove("is-hop"), 650);
+}
+async function react(kind){
+  const a = AV.el; if (!a || AV.reduce || AV.thinking) return;
+  if (kind === "nod"){ a.classList.remove("is-nod"); void a.offsetWidth; a.classList.add("is-nod"); eyes(.6); mouth(1.3, 1.1); await wait(600); a.classList.remove("is-nod"); eyes(1); mouth(1); }
+  else if (kind === "cheer"){ hop(); eyes(.15); mouth(1.4, 1.3); await wait(900); eyes(1); mouth(1); }
+  else if (kind === "wink"){ eyes(1, .08); mouth(1.25, 1); await wait(500); eyes(1); mouth(1); }
+}
+function poke(){
+  const r = Math.random();
+  if (r < .4){ hop(); talk(); } else if (r < .7) react("wink"); else { tilt(Math.random() < .5 ? -9 : 9); blink(1); setTimeout(() => tilt(0), 900); }
+}
+async function idleOnce(){
+  const a = AV.el;
+  if (AV.thinking){ return; }
+  if (a.classList.contains("is-talking")){ await blink(1); return; }
+  const r = Math.random();
+  if (r < .40) await blink(1);
+  else if (r < .52) await blink(2);
+  else if (r < .68){ look(Math.random() < .5 ? -2.2 : 2.2, rnd(-.3, 1.2)); await wait(rnd(700, 1600)); if (Math.random() < .5) await blink(1); look(0, 0); }
+  else if (r < .76){ look(rnd(-1, 1), -1.6); await wait(rnd(600, 1300)); look(0, 0); }
+  else if (r < .87){ tilt(Math.random() < .5 ? -7 : 7); await wait(rnd(900, 1500)); tilt(0); }
+  else if (r < .94){ mouth(1.35, 1.15); eyes(.7); await wait(900); mouth(1); eyes(1); }
+  else hop();
+}
+function idleLoop(){
+  clearTimeout(AV.t);
+  AV.t = setTimeout(async () => {
+    if (document.visibilityState === "visible" && !AV.reduce && !AV.busy){ AV.busy = true; try{ await idleOnce(); }catch(e){} AV.busy = false; }
+    idleLoop();
+  }, rnd(1500, 4800));
+}
+function avInit(){
+  AV.el = $("h-avatar");
+  AV.reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if (AV.reduce) return;
+  idleLoop();
+  document.addEventListener("pointerdown", (e) => {          // タップした方へ目線が動く
+    if (AV.thinking || e.target.closest("#h-avatar")) return;
+    const r = AV.el.getBoundingClientRect(); if (!r.width || r.bottom < 0) return;
+    const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    look(Math.max(-2.2, Math.min(2.2, dx / 90)), Math.max(-1.5, Math.min(2, dy / 140)));
+    clearTimeout(AV.lookT); AV.lookT = setTimeout(() => { if (!AV.thinking) look(0, 0); }, 900);
+  }, { passive:true });
 }
 function say(text){
   const b = $("h-bubble"); if (text === SAID) return;
@@ -898,7 +967,7 @@ function renderAssistant(events, now){
   const ready = !META.loading && (META.ok || META.demo);
   const items = ready ? briefing(events, now) : [];
   const askable = !!sampleFn;
-  $("h-avatar").classList.toggle("is-thinking", !!(CHAT.busy && !CHAT.a));
+  avThinking(!!(CHAT.busy && !CHAT.a));
   const prev = $("ask-in"), keep = prev ? { v: prev.value, f: document.activeElement === prev, s: prev.selectionStart } : null;
   let chat = "";
   if (askable){
@@ -1086,7 +1155,7 @@ function renderAll(){ renderHome(); if (DETAIL) renderDetail(); }
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const act = el.dataset.act;
-  if (act === "avatar"){ hop(); return; }
+  if (act === "avatar"){ poke(); return; }
   if (act === "open"){ openDetail(el.dataset.id); return; }
   if (act === "close"){ closeDetail(); return; }
   if (act === "settings"){ openSettings(); return; }
@@ -1111,7 +1180,7 @@ document.addEventListener("change", (e) => {
   if (act === "done"){
     const t = byId(el.dataset.ev); if (!t) return;
     const li = el.closest("li");
-    const finish = () => { markDone(t, el.dataset.item, el.checked); const fin = isFinished(t); renderAll(); if (el.checked && fin) toast(`「${t.title}」の準備はすべて済みました`); };
+    const finish = () => { markDone(t, el.dataset.item, el.checked); const fin = isFinished(t); renderAll(); if (el.checked) react(fin ? "cheer" : "nod"); if (el.checked && fin) toast(`「${t.title}」の準備はすべて済みました`); };
     if (el.checked && li && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){ li.classList.add("is-going"); setTimeout(finish, 220); } else finish();
     return;
   }
@@ -1335,7 +1404,7 @@ function loadDemo(){
 
 /* ---------- 起動 ---------- */
 $("btn-refresh").addEventListener("click", () => refresh(false));
-renderHome();
+renderHome(); avInit();
 setInterval(() => {
   const k = dayKey(new Date());
   if (watchedDay && k !== watchedDay){ watchedDay = k; if (mcp) startWatch(); else if (META.demo) loadDemo(); else if (FEED.available) loadFeed(false); }
