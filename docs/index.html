@@ -226,38 +226,33 @@ main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behav
 .tile .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; background:var(--hair)}
 .tile .dot.prep{background:var(--rose-soft)} .tile .dot.check{background:var(--amber-soft)}
 
-/* ---------- 月カレンダー ---------- */
-.cal{padding:12px 10px 6px}
+/* ---------- 月カレンダー（日付のマスの中に予定名を出す） ---------- */
+.cal{padding:12px 8px 8px}
 .cal-h{display:flex; align-items:center; justify-content:space-between; padding:0 4px 8px}
 .cal-h b{font-size:1rem; color:var(--ink)}
 .cal-nav{width:40px; height:40px; border-radius:50%; border:0; background:var(--surface-2); color:var(--primary); display:grid; place-items:center}
 .cal-nav svg{width:18px; height:18px}
 .cal-nav[disabled]{opacity:.35; cursor:default}
-.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:2px}
+.cal-wds{display:grid; grid-template-columns:repeat(7,minmax(0,1fr))}
 .cal-wd{font-size:.7rem; font-weight:600; text-align:center; color:var(--ink-3); padding:2px 0 4px}
 .cal-wd.sun{color:var(--rose)} .cal-wd.sat{color:var(--accent)}
-.cal-d{min-height:50px; border:0; background:none; border-radius:12px; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 0 4px; color:var(--ink); min-width:0}
-.cal-d .n{font-size:.9rem; font-weight:500; width:28px; height:28px; display:grid; place-items:center; border-radius:50%}
+.cal-grid{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+.cal-d{background:var(--surface); min-height:64px; padding:4px 2px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.cal-d.is-blank, .cal-d.is-past, .cal-d.is-far{background:var(--surface-2)}
+.cal-d .n{font-size:.78rem; font-weight:600; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; margin:0 auto; color:var(--ink); flex:none}
 .cal-d.is-sat .n{color:var(--accent)} .cal-d.is-sun .n, .cal-d.is-hol .n{color:var(--rose)}
+.cal-d.is-past .n, .cal-d.is-far .n{color:var(--hair)}
 .cal-d.is-today .n{background:var(--primary); color:var(--primary-ink)}
-.cal-d[aria-pressed="true"]{background:var(--tint); box-shadow:inset 0 0 0 1.5px var(--accent)}
-.cal-d:disabled{cursor:default} .cal-d:disabled .n{color:var(--hair)}
-.cal-d.is-far .n{color:var(--hair)}
-.cal-d .dots{display:flex; gap:3px; height:6px}
-.cal-d .dots i{width:6px; height:6px; border-radius:50%; background:var(--hair)}
-.cal-d .dots i.prep{background:var(--rose-soft)} .cal-d .dots i.check{background:var(--amber-soft)}
-.cal-legend{display:flex; gap:12px; justify-content:flex-end; font-size:.7rem; color:var(--ink-3); padding:6px 4px 0}
+.cal-d .hol{font-size:.58rem; line-height:1.25; color:var(--rose); text-align:center; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.cal-ev{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; width:100%; border:0; border-left:3px solid var(--hair); border-radius:4px; padding:2px 2px 2px 3px; background:var(--surface-2); color:var(--ink); font-size:.64rem; font-weight:500; line-height:1.3; text-align:left; word-break:break-all; flex:none}
+.cal-ev.prep{background:var(--rose-bg); border-left-color:var(--rose-soft)}
+.cal-ev.check{background:var(--amber-bg); border-left-color:var(--amber-soft)}
+.cal-ev.done{color:var(--ink-3); text-decoration:line-through}
+.cal-more{border:0; background:none; color:var(--primary); font-size:.64rem; font-weight:700; padding:2px 0; min-height:22px}
+.cal-legend{display:flex; gap:12px; justify-content:flex-end; font-size:.7rem; color:var(--ink-3); padding:8px 4px 0}
 .cal-legend span{display:inline-flex; align-items:center; gap:4px}
-.cal-legend i{width:6px; height:6px; border-radius:50%; background:var(--hair)}
-.cal-legend i.prep{background:var(--rose-soft)} .cal-legend i.check{background:var(--amber-soft)}
-.cal-day{border-top:1px solid var(--line); margin-top:8px; padding:12px 4px 4px}
-.cal-day h3{font-size:.92rem; margin:0 0 2px; display:flex; gap:8px; align-items:baseline}
-.cal-day h3 small{font-size:.75rem; font-weight:600; color:var(--rose)}
-.cal-row{display:flex; gap:10px; align-items:center; width:100%; text-align:left; background:none; border:0; border-top:1px solid var(--line); padding:10px 2px; min-height:48px; color:inherit}
-.cal-row:first-of-type{border-top:0}
-.cal-row .t{width:56px; flex:none; font-size:.8rem; color:var(--ink-3)}
-.cal-row .tt{flex:1; min-width:0; font-size:.92rem; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.cal-day .empty{padding:8px 2px}
+.cal-legend i{width:10px; height:10px; border-radius:2px; background:var(--surface-2); border-left:3px solid var(--hair)}
+.cal-legend i.prep{background:var(--rose-bg); border-left-color:var(--rose-soft)} .cal-legend i.check{background:var(--amber-bg); border-left-color:var(--amber-soft)}
 
 /* ---------- 週の見出し・ヒント ---------- */
 .wk-h{display:flex; align-items:center; gap:10px; margin:22px 0 10px; font-size:.8rem}
@@ -462,12 +457,13 @@ details.routine .rrow b{font-weight:600; color:var(--ink); width:52px; flex:none
         <div id="h-ai"></div>
       </section>
 
-      <section class="sec" id="sec-tasks" aria-label="予定と準備">
-        <div class="sec-h"><h2>予定と準備</h2><span class="range" id="tasks-note">カードの中でそのままチェックできます</span></div>
-        <div class="seg" role="group" aria-label="表示の切り替え">
-          <button type="button" data-act="view" data-v="list" aria-pressed="true">準備リスト</button>
-          <button type="button" data-act="view" data-v="cal" aria-pressed="false">カレンダー</button>
-        </div>
+      <section class="sec" id="sec-cal" aria-label="カレンダー">
+        <div class="sec-h"><h2>カレンダー</h2><span class="range">予定をタップすると詳細を表示</span></div>
+        <div id="h-cal"></div>
+      </section>
+
+      <section class="sec" id="sec-tasks" aria-label="準備リスト">
+        <div class="sec-h"><h2>準備リスト</h2><span class="range" id="tasks-note">カードの中でそのままチェックできます</span></div>
         <div id="h-tasks"></div>
       </section>
     </div>
@@ -973,9 +969,10 @@ function sugCard(ev, now){
     ${ev.cls.insight ? `<p class="hint"><svg><use href="#i-bulb"/></svg>${esc(ev.cls.insight)}</p>` : ""}
     ${sugList(ev, 4)}</article>`;
 }
-/* ---------- 月カレンダー（準備リストと切り替え。定型・移動を除く全部の予定を点で出す） ---------- */
-let VIEW = store.get("view", "list") === "cal" ? "cal" : "list";
-let CALM = null, CALSEL = null;                // 表示中の月（1日）、選んだ日（dayKey）
+/* ---------- 月カレンダー（定型・移動を除く全部の予定を、日付のマスの中に予定名で出す） ---------- */
+let CALM = null;                               // 表示中の月（1日）
+const CALOPEN = new Set();                     // 「+N件」で広げた日（dayKey）
+const CAL_MAX = 3;                             // 1マスに出す予定の数（超えたら「+N件」）
 function evDays(ev){
   const out = [], last = startOfDay(ev.allDay ? ev.end : new Date(Math.max(+ev.start, ev.end - 1)));
   for (let d = startOfDay(ev.start); d <= last && out.length < DAYS; d = addDays(d, 1)) out.push(dayKey(d));
@@ -986,41 +983,32 @@ function renderCalendar(events, now){
   const today = startOfDay(now), last = addDays(today, DAYS - 1);
   const minM = new Date(today.getFullYear(), today.getMonth(), 1), maxM = new Date(last.getFullYear(), last.getMonth(), 1);
   if (!CALM || CALM < minM) CALM = minM; if (CALM > maxM) CALM = maxM;
-  if (!CALSEL || localDate(CALSEL) < today) CALSEL = dayKey(today);
   const byDay = {};
   for (const ev of events.filter(e => !e.routine && !e.move)) for (const k of evDays(ev)) (byDay[k] = byDay[k] || []).push(ev);
+  for (const k in byDay) byDay[k].sort((a, b) => (b.allDay - a.allDay) || a.start - b.start);
   const y = CALM.getFullYear(), m = CALM.getMonth(), days = new Date(y, m + 1, 0).getDate();
-  let cells = WD.split("").map((w, i) => `<div class="cal-wd${i === 0 ? " sun" : i === 6 ? " sat" : ""}" aria-hidden="true">${w}</div>`).join("");
-  cells += "<div></div>".repeat(CALM.getDay());
+  const wds = WD.split("").map((w, i) => `<div class="cal-wd${i === 0 ? " sun" : i === 6 ? " sat" : ""}">${w}</div>`).join("");
+  let cells = `<div class="cal-d is-blank" aria-hidden="true"></div>`.repeat(CALM.getDay());
   for (let i = 1; i <= days; i++){
-    const d = new Date(y, m, i), k = dayKey(d), list = byDay[k] || [], hol = HOL[k];
-    const past = d < today, far = d > last, prepN = list.filter(e => ["prep", "check"].includes(calLevel(e))).length;
-    const dots = list.slice(0, 3).map(e => `<i class="${calLevel(e)}"></i>`).join("");
-    const label = `${m + 1}月${i}日 ${WD[d.getDay()]}曜${hol ? `・${hol}` : ""}${list.length ? `、予定${list.length}件${prepN ? `（準備がいる予定${prepN}件）` : ""}` : ""}`;
-    cells += `<button type="button" class="cal-d ${dayClass(d, hol)}${k === dayKey(today) ? " is-today" : ""}${far ? " is-far" : ""}" data-act="cal-day" data-k="${k}" aria-pressed="${k === CALSEL}" aria-label="${esc(label)}"${past ? " disabled" : ""}><span class="n num">${i}</span><span class="dots">${dots}</span></button>`;
+    const d = new Date(y, m, i), k = dayKey(d), hol = HOL[k], past = d < today, far = d > last;
+    const list = past ? [] : (byDay[k] || []), open = CALOPEN.has(k) || list.length <= CAL_MAX;
+    const shown = open ? list : list.slice(0, CAL_MAX - 1);
+    const chips = shown.map(ev => { const l = calLevel(ev);
+      return `<button type="button" class="cal-ev ${l}" data-act="open" data-id="${esc(ev.id)}" aria-label="${esc(`${ev.title}、${ev.allDay ? "終日" : hhmm(ev.start)}、${LEVEL[l].label}`)}">${esc(ev.title)}</button>`; }).join("");
+    const more = open ? "" : `<button type="button" class="cal-more" data-act="cal-more" data-k="${k}" aria-label="${m + 1}月${i}日の予定をすべて表示">+${list.length - shown.length}件</button>`;
+    cells += `<div class="cal-d ${dayClass(d, hol)}${k === dayKey(today) ? " is-today" : ""}${past ? " is-past" : ""}${far ? " is-far" : ""}" role="group" aria-label="${m + 1}月${i}日 ${WD[d.getDay()]}曜${hol ? `・${esc(hol)}` : ""}${list.length ? `、予定${list.length}件` : ""}"><span class="n num">${i}</span>${hol ? `<span class="hol">${esc(hol)}</span>` : ""}${chips}${more}</div>`;
   }
-  const sel = localDate(CALSEL), selList = (byDay[CALSEL] || []).slice().sort((a, b) => (b.allDay - a.allDay) || a.start - b.start), selHol = HOL[CALSEL];
-  const rows = sel > last ? `<p class="empty">この日の予定はまだ読み込んでいません（今日から1ヶ月先まで表示します）。</p>`
-    : selList.length ? selList.map(ev => { const l = calLevel(ev);
-        return `<button type="button" class="cal-row" data-act="open" data-id="${esc(ev.id)}"><span class="t num">${ev.allDay ? "終日" : hhmm(ev.start)}</span><span class="tt">${esc(ev.title)}</span>${l === "easy" ? "" : `<span class="badge ${l}">${LEVEL[l].label}</span>`}</button>`; }).join("")
-    : `<p class="empty">予定はありません。</p>`;
-  const prevOk = CALM > minM, nextOk = CALM < maxM;
+  cells += `<div class="cal-d is-blank" aria-hidden="true"></div>`.repeat((7 - (CALM.getDay() + days) % 7) % 7);
   return `<div class="card cal">
-    <div class="cal-h"><button type="button" class="cal-nav" data-act="cal-prev" aria-label="前の月"${prevOk ? "" : " disabled"}><svg><use href="#i-left"/></svg></button>
+    <div class="cal-h"><button type="button" class="cal-nav" data-act="cal-prev" aria-label="前の月"${CALM > minM ? "" : " disabled"}><svg><use href="#i-left"/></svg></button>
       <b class="num" aria-live="polite">${y}年${m + 1}月</b>
-      <button type="button" class="cal-nav" data-act="cal-next" aria-label="次の月"${nextOk ? "" : " disabled"}><svg><use href="#i-right"/></svg></button></div>
+      <button type="button" class="cal-nav" data-act="cal-next" aria-label="次の月"${CALM < maxM ? "" : " disabled"}><svg><use href="#i-right"/></svg></button></div>
+    <div class="cal-wds" aria-hidden="true">${wds}</div>
     <div class="cal-grid">${cells}</div>
     <div class="cal-legend" aria-hidden="true"><span><i class="prep"></i>要準備</span><span><i class="check"></i>確認のみ</span><span><i></i>その他</span></div>
-    <div class="cal-day"><h3 class="num">${sel.getMonth() + 1}月${sel.getDate()}日（${WD[sel.getDay()]}）${selHol ? `<small>${esc(selHol)}</small>` : ""}</h3>${rows}</div>
   </div>`;
 }
 function renderTasks(sm, now){
-  document.querySelectorAll('#sec-tasks [data-act="view"]').forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === VIEW)));
-  if (VIEW === "cal"){
-    $("tasks-note").textContent = "日付をタップすると、その日の予定を表示";
-    $("h-tasks").innerHTML = renderCalendar(visible(now), now);
-    return;
-  }
   const groups = [[], [], [], []];
   for (const ev of sm.main) groups[Math.min(bucketWeek(ev, now), 3)].push(ev);
   const today = startOfDay(now);
@@ -1102,6 +1090,7 @@ function renderHome(){
   renderStatus();
   const events = visible(now), sm = monthSummary(events, now);
   renderGreeting(sm, now);
+  $("h-cal").innerHTML = renderCalendar(events, now);
   renderTasks(sm, now);
   renderAssistant(events, now);
 }
@@ -1250,9 +1239,8 @@ document.addEventListener("click", (e) => {
   if (act === "open"){ openDetail(el.dataset.id); return; }
   if (act === "close"){ closeDetail(); return; }
   if (act === "settings"){ openSettings(); return; }
-  if (act === "view"){ VIEW = el.dataset.v === "cal" ? "cal" : "list"; store.set("view", VIEW); renderHome(); return; }
   if (act === "cal-prev" || act === "cal-next"){ if (CALM){ CALM = new Date(CALM.getFullYear(), CALM.getMonth() + (act === "cal-next" ? 1 : -1), 1); } renderHome(); const b = document.querySelector(`[data-act="${act}"]:not([disabled])`) || document.querySelector(".cal-h b"); if (b && b.focus) b.focus(); return; }
-  if (act === "cal-day"){ CALSEL = el.dataset.k; renderHome(); const b = document.querySelector(`.cal-d[data-k="${CSS.escape(CALSEL)}"]`); if (b) b.focus(); return; }
+  if (act === "cal-more"){ const cell = el.closest(".cal-d"), label = cell ? cell.getAttribute("aria-label") : "", n = cell ? cell.querySelectorAll(".cal-ev").length : 0; CALOPEN.add(el.dataset.k); renderHome(); const c = [...document.querySelectorAll(".cal-d")].find(x => x.getAttribute("aria-label") === label), t = c && c.querySelectorAll(".cal-ev")[n]; if (t) t.focus(); return; }
   if (act === "settings-close"){ closeSettings(); return; }
   if (act === "demo"){ loadDemo(); return; }
   if (act === "refresh"){ refresh(); return; }
