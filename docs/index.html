@@ -949,18 +949,23 @@ function renderTasks(sm, now){
 }
 
 /* ---------- 描画：AIアシスタント（予定単位ではなく、全体の見通しと相談） ---------- */
+const BRIEF_RANGES = [[0, 3], [3, 14], [14, Infinity]];   // [何日後から, 何日後まで) — 切れ目なくつなぐこと
 function briefing(events, now){
   const out = [], main = events.filter(ev => !ev.routine && !ev.move && ev.cls.level !== "easy"), today = startOfDay(now);
-  const soon = main.filter(ev => bucketDay(ev, now) <= 2);
-  if (soon.length) out.push({ tone:"blue", icon:"i-clock", text:`3日以内の予定は${soon.length}件：${soon.slice(0, 4).map(ev => `${ev.title}（${relDay(bucketDay(ev, now))}）`).join("、")}${soon.length > 4 ? " ほか" : ""}。` });
+  // 期間は切れ目なく「3日以内 → 2週間以内 → その先」に分ける（2026-09-29: 4〜13日後が
+  // どこにも入らず、土曜の歯医者などを秘書が一切話さなかったため。境界は BRIEF_RANGES だけで決める）
+  const pend = main.filter(ev => !isFinished(ev));
+  const [soon, mid, far] = BRIEF_RANGES.map(([a, b]) => pend.filter(ev => { const d = bucketDay(ev, now); return d >= a && d < b; }));
+  const names = (list, n, fmt) => list.slice(0, n).map(fmt).join("、") + (list.length > n ? " ほか" : "");
+  if (soon.length) out.push({ tone:"blue", icon:"i-clock", text:`3日以内の予定は${soon.length}件：${names(soon, 4, ev => `${ev.title}（${relDay(bucketDay(ev, now))}）`)}。` });
   else out.push({ tone:"green", icon:"i-check", text:"3日以内に予定はありません。少し先の準備に手をつけるチャンスです。" });
+  if (mid.length) out.push({ tone:"blue", icon:"i-list", text:`2週間以内で準備がいる予定は${mid.length}件：${names(mid, 4, ev => `${ev.title}（${md(ev.start)} ${WD[ev.start.getDay()]}）`)}。` });
   const perDay = {}; for (const ev of main){ const k = dayKey(addDays(today, bucketDay(ev, now))); perDay[k] = (perDay[k] || 0) + 1; }
   const busy = Object.keys(perDay).filter(k => perDay[k] >= 3).sort().map(k => localDate(k));
   if (busy.length) out.push({ tone:"amber", icon:"i-alert", text:`${busy.slice(0, 2).map(d => `${md(d)}（${WD[d.getDay()]}）`).join("・")}は予定が3件以上。移動と休憩に余裕を持たせましょう。` });
   const hols = Object.keys(HOL).sort().filter(k => { const d = daysUntil(localDate(k), now); return d >= 0 && d < DAYS; });
   if (hols.length) out.push({ tone:"rose", icon:"i-cal", text:`${hols.slice(0, 3).map(k => `${md(localDate(k))} ${HOL[k]}`).join("、")}。休みの前後は、予約や締切のずれに注意。` });
-  const far = main.filter(ev => bucketDay(ev, now) >= 14 && !isFinished(ev));
-  if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先で準備がいる予定は${far.length}件：${far.slice(0, 3).map(ev => `${ev.title}（${md(ev.start)}）`).join("、")}。交通や宿の予約は今のうちに。` });
+  if (far.length) out.push({ tone:"violet", icon:"i-list", text:`2週間より先で準備がいる予定は${far.length}件：${names(far, 3, ev => `${ev.title}（${md(ev.start)}）`)}。交通や宿の予約は今のうちに。` });
   return out;
 }
 function renderAssistant(events, now){
