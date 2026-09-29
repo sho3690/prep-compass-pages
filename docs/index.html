@@ -710,7 +710,9 @@ function prepare(events){
   for (const ev of events){
     ev.cls = classify(ev); ev.routine = ev.cls.key === "routine"; ev.move = ev.cls.key === "move";
     const sg = SUG[ev.id];
-    if (sg && !ev.routine && !ev.move){
+    // AI が「準備不要」と判断しても、キーワードで準備がいると分かる予定（歯医者など）は消さずにキーワードの提案を使う
+    // （2026-09-29: claude.ai 版で AI が歯医者を準備不要にし、一覧からも秘書からも消えていた）
+    if (sg && !ev.routine && !ev.move && (sg.needsPrep || ev.cls.level === "easy")){
       ev.cls = { key:"ai", label: sg.category || ev.cls.label, level: sg.needsPrep ? "prep" : "easy", items: sg.items, insight: sg.hint || null };
     }
   }
